@@ -6,7 +6,7 @@
 
 **retrolm** is a personal, challenging side-project: a complete Large Language Model (LLM) inference engine written from the ground up in **C and x86 Assembly**.
 
-The core goal is to run a simple transformer model on a machine it was never meant to touch: the **Intel Pentium II** architecture, compiled using the classic **Turbo C** toolchain. This project explores the true engineering overhead of deep learning by stripping away all modern frameworks and dependencies.
+The core goal is to run a simple transformer model on a machine it was never meant to touch: the **Intel Pentium II** architecture running **FreeDOS**. This project explores the true engineering overhead of deep learning by stripping away all modern frameworks and dependencies.
 
 ## 🛠️ The Development Ethos (Hard Mode Activated)
 
@@ -15,25 +15,26 @@ In building this, I deliberately chose constraints to understand the fundamental
 * **Solo Development:** Every line of code was written by me alone.
 * **No AI Assistance:** I relied purely on my own knowledge and classic documentation, avoiding LLMs for coding the LLM.
 * **Minimalist Tooling:** Development was done primarily using a plain text editor, bypassing the comfort of modern IDE features like advanced autocompletion or dynamic debugging.
-* **Classic References:** My primary guides were physical manuals: *The C Programming Language* (K&R), the *The Art of Assembly Language* (H), and archived technical forums.
+* **Classic References:** My primary guides were physical manuals: *The C Programming Language* (K&R) and *The Art of Assembly Language* (Hyde).
 
 ## 💾 Core Technical Details
 
 * **Zero Dependencies:** The project contains no external libraries (no PyTorch, NumPy, or specialized BLAS). I wrote all custom math and linear algebra kernels myself.
-* **Authentic Toolchain:** The code is structured and compiled to be fully compatible with the Borland Turbo C / C++ environment, targeting DOS/Win9x systems.
+* **32-bit x86 Assembly:** Hand-optimized assembly routines for performance-critical operations.
+* **DJGPP Toolchain:** Cross-compiled using DJGPP (DOS port of GCC) for maximum compatibility with FreeDOS.
 
 ---
 
 # 🖥️ Required Target Hardware
 
-To run and compile `retrolm`, you'll be aiming for the following vintage specifications. Results will vary *greatly* based on clock speed and available RAM.
+To run `retrolm`, you'll be aiming for the following vintage specifications. Results will vary *greatly* based on clock speed and available RAM.
 
 | Component | Minimum Spec | Recommended Spec |
 | :--- | :--- | :--- |
-| **Processor** | Intel Pentium II (233MHz) | Intel Pentium II Deschutes (450MHz) |
-| **RAM** | 32 MB EDO or SDRAM | 128 MB PC100 SDRAM |
-| **OS** | MS-DOS 6.22 or Win95/98 | Windows 98 SE |
-| **Compiler** | Turbo C/C++ 4.5+ | Borland C++ 5.02 |
+| **Processor** | Intel Pentium II (233MHz) | Intel Pentium II (400MHz+) |
+| **RAM** | 64 MB SDRAM | 128 MB SDRAM |
+| **OS** | FreeDOS 1.2+ | FreeDOS 1.3 |
+| **Storage** | 100 MB free space | 500 MB+ free space |
 
 ---
 
@@ -55,13 +56,7 @@ retrolm/
 ├── build-linux.sh         # Linux build script (for testing)
 ├── build-dos.sh           # DOS build script (for deployment)
 ├── docker-shell.sh        # Interactive container access
-├── src/
-│   ├── matmul.asm        # x86 assembly (32-bit)
-│   ├── exceptions.c
-│   ├── logger.c
-│   ├── main.c
-│   ├── matrix.c
-│   └── memory.c
+├── src/                   # Source files (C and Assembly)
 └── build/                 # Generated executables (gitignored)
 ```
 
@@ -164,7 +159,7 @@ Development is performed on an **Apple M4 MacBook Air** using Docker for x86_64 
    - Transfer via serial/parallel cable
    - Use network boot (if available)
 
-3. Boot FreeDOS/DOS on the Pentium II and run:
+3. Boot FreeDOS on the Pentium II and run:
 ```bash
    C:\> retrollm.exe
 ```
@@ -179,15 +174,32 @@ I wanted to find out what happens when you take one of the most resource-intensi
 
 ## 📚 References
 
-- **The C Programming Language** (2nd Edition) - Kernighan & Ritchie
+- **The C Programming Language** (2nd Edition) - Brian W. Kernighan & Dennis M. Ritchie
 - **The Art of Assembly Language** - Randall Hyde
-- Intel Pentium II Processor Specification
-- DJGPP Cross-Compiler Documentation
-- NASM Assembly Documentation
 
 ## 📝 License
 
-[Your chosen license]
+MIT License
+
+Copyright (c) 2025 [Angelo Zuffianò]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ## 🙏 Acknowledgments
 
