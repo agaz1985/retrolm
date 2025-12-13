@@ -10,7 +10,7 @@ struct Matrix2D new_mat(unsigned int r, unsigned int c) {
 }
 
 void del_mat(struct Matrix2D m) {
-	free_mat(m.data, m.r, m.c);
+	free_mat(m.data, m.r);
 	m.data = NULL;
 	m.r = 0;
 	m.c = 0;

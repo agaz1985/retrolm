@@ -7,12 +7,16 @@
 #include "memory.h"
 #include "exceptions.h"
 
+
+extern long add_numbers(long a, long b);
+
+
 void print_mat(struct Matrix2D m) {
 	char buffer[4096] = "\n";
 	int offset = 1;
 	
-	for (int i = 0; i < m.r; ++i) {
-		for (int j = 0; j < m.c; ++j) {
+	for (unsigned int i = 0; i < m.r; ++i) {
+		for (unsigned int j = 0; j < m.c; ++j) {
 			offset += sprintf(buffer + offset, "%f,", m.data[i][j]);
 		}
 		offset += sprintf(buffer + offset, "\n");
@@ -26,9 +30,9 @@ void matmul(struct Matrix2D m1, struct Matrix2D m2, struct Matrix2D out) {
    	throw("Matrix dimensions do not match!\n", InvalidInput);
    }
 
-   for (int x = 0; x < m1.r; ++x) {
-   	for (int z = 0; z < m2.c; ++z) {
-   	  for (int y = 0; y < m1.c; ++y) {
+   for (unsigned int x = 0; x < m1.r; ++x) {
+   	for (unsigned int z = 0; z < m2.c; ++z) {
+   	  for (unsigned int y = 0; y < m1.c; ++y) {
    		out.data[x][z] += m1.data[x][y] * m2.data[y][z];
    	  }
     }
@@ -36,6 +40,9 @@ void matmul(struct Matrix2D m1, struct Matrix2D m2, struct Matrix2D out) {
 }
 
 int main() {
+	long result = add_numbers(5, 3);
+	printf("The result is: %ld\n", result);
+
 	logger("Allocate memory...\n", DEBUG);
 
 	struct Matrix2D m1 = new_mat(2, 3);
