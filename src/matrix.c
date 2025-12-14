@@ -6,13 +6,20 @@
 #include "exceptions.h"
 #include "matrix_ops.h"
 
-struct Matrix2D new_mat(unsigned int r, unsigned int c) {
+struct Matrix2D mat_new(unsigned int r, unsigned int c) {
+	if (r == 0) {
+		throw("Matrix number of rows cannot be zero.", InvalidInput);
+	}
+	if (c == 0) {
+		throw("Matrix number of columns cannot be zero.", InvalidInput);
+	}
+
 	float *data = alloc_mat(r, c);
 	struct Matrix2D m = {r, c, data};
 	return m;
 }
 
-void del_mat(struct Matrix2D *m) {
+void mat_free(struct Matrix2D *m) {
 	free_mat(m->data);
 	m->data = NULL;
 	m->r = 0;
@@ -29,7 +36,7 @@ float* mat_at(const struct Matrix2D *m, unsigned int i, unsigned int j) {
 	return &m->data[index];
 }
 
-void print_mat(const struct Matrix2D *m)
+void mat_print(const struct Matrix2D *m)
 {
     unsigned int i, j;
     char buffer[4096];
@@ -53,11 +60,36 @@ void print_mat(const struct Matrix2D *m)
 
 // Matrix Operations
 
-void matmul(const struct Matrix2D * m1,
-  const struct Matrix2D * m2, struct Matrix2D * res) {
-  if (m1 -> c != m2 -> r) {
+struct Matrix2D mat_mul(const struct Matrix2D *m1, const struct Matrix2D *m2) {
+  if (m1->c != m2->r) {
     throw ("Matrix dimensions do not match!\n", InvalidInput);
   }
 
-  _matmul(m1 -> data, m2 -> data, res -> data, m1 -> r, m1 -> c, m2 -> c);
+  struct Matrix2D res = mat_new(m1->r, m2->c);
+  _matmul(m1->data, m2->data, res.data, m1->r, m1->c, m2->c);
+  return res;
+}
+
+/* scalar operations (in-place) */
+void mat_scale(struct Matrix2D *m, float alpha) {
+	_matscale(m->data, m->r * m->c, alpha);
+}
+
+void mat_shift(struct Matrix2D *m, float beta) {
+	_matshift(m->data, m->r * m->c, beta);
+}
+
+/* special matrices / transforms */
+struct Matrix2D mat_transpose(const struct Matrix2D *m) {
+	struct Matrix2D res = mat_new(m->c, m->r);
+	_mattranspose(m->data, m->r, m->c, res.data);
+	return res;
+}
+
+struct Matrix2D mat_identity(unsigned int n) {
+	struct Matrix2D res = mat_new(n, n);
+	for (unsigned int i = 0; i < n; ++i) {
+		*mat_at(&res, i, i) = 1.f;
+	}
+	return res;
 }

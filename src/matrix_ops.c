@@ -1,5 +1,7 @@
 #include "matrix_ops.h"
 
+#define BLOCK 8 // Small block for 16KB L1 cache of Pentium II
+
 void _matmul(const float *m1, const float *m2, float *res, unsigned int r1, unsigned int c1, unsigned int c2) {
   unsigned int i, j, k;
   for (i = 0; i < r1; ++i) {
@@ -30,3 +32,31 @@ void _matmul(const float *m1, const float *m2, float *res, unsigned int r1, unsi
     }
   }
 }
+
+void _mattranspose(const float *m, unsigned int r, unsigned int c, float *res) {
+  unsigned int i, j, ii, jj;
+  unsigned int i_max, j_max;
+  
+  for (ii = 0; ii < r; ii += BLOCK) {
+      i_max = (ii + BLOCK < r) ? ii + BLOCK : r;
+      for (jj = 0; jj < c; jj += BLOCK) {
+          j_max = (jj + BLOCK < c) ? jj + BLOCK : c;
+          for (i = ii; i < i_max; ++i)
+              for (j = jj; j < j_max; ++j)
+                  res[j*r + i] = m[i*c + j];
+      }
+  }
+}
+
+void _matscale(float *m, unsigned int n, float alpha) {
+  for (unsigned int i = 0; i < n; ++i) {
+    m[i] *= alpha;
+  }
+}
+
+void _matshift(float *m, unsigned int n, float beta) {
+  for (unsigned int i = 0; i < n; ++i) {
+    m[i] += beta;
+  }
+}
+
