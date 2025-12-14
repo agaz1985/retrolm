@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "logger.h"
 #include "matrix.h"
@@ -8,10 +9,10 @@
 
 struct Matrix2D mat_new(unsigned int r, unsigned int c) {
 	if (r == 0) {
-		throw("Matrix number of rows cannot be zero.", InvalidInput);
+		throw("Matrix number of rows cannot be zero.\n", InvalidInput);
 	}
 	if (c == 0) {
-		throw("Matrix number of columns cannot be zero.", InvalidInput);
+		throw("Matrix number of columns cannot be zero.\n", InvalidInput);
 	}
 
 	float *data = alloc_mat(r, c);
@@ -30,7 +31,7 @@ float* mat_at(const struct Matrix2D *m, unsigned int i, unsigned int j) {
 	const unsigned int index = i * m->c + j;
 
 	if (index >= m->r * m->c) {
-		throw("Matrix index out of range.", IndexError);
+		throw("Matrix index out of range.\n", IndexError);
 	}
 
 	return &m->data[index];
@@ -91,5 +92,35 @@ struct Matrix2D mat_identity(unsigned int n) {
 	for (unsigned int i = 0; i < n; ++i) {
 		*mat_at(&res, i, i) = 1.f;
 	}
+	return res;
+}
+
+/* copy and clamping operations */
+
+struct Matrix2D mat_copy(const struct Matrix2D *m) {
+	struct Matrix2D res = mat_new(m->r, m->c);
+	memcpy(res.data, m->data, m->r * m->c * sizeof(float));
+	return res;
+}
+
+struct Matrix2D mat_clamp(const struct Matrix2D *m, float lo, float hi) {
+	if (lo >= hi) {
+		throw ("Low value must be strictly lower than the high value!\n", InvalidInput);
+	}
+
+	struct Matrix2D res = mat_copy(m);
+	_matclamp(res.data, res.r * res.c, lo, hi);
+	return res;
+}
+
+struct Matrix2D mat_clamp_min(const struct Matrix2D *m, float lo) {
+	struct Matrix2D res = mat_copy(m);
+	_matclampmin(res.data, res.r * res.c, lo);
+	return res;
+}
+
+struct Matrix2D mat_clamp_max(const struct Matrix2D *m, float hi) {
+	struct Matrix2D res = mat_copy(m);
+	_matclampmax(res.data, res.r * res.c, hi);
 	return res;
 }

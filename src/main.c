@@ -4,28 +4,35 @@
 
 #include "logger.h"
 #include "matrix.h"
+#include "activations.h"
 
 int main() {
 	logger("Allocate memory...\n", DEBUG);
 
 	struct Matrix2D m1 = mat_new(2, 3);
 	struct Matrix2D m2 = mat_new(3, 2);
+	struct Matrix2D m4 = mat_new(1, 3);
 
 	/* m1: 2 rows, 3 cols */
-	*mat_at(&m1, 0, 0) = 1;
-	*mat_at(&m1, 0, 1) = 2;
-	*mat_at(&m1, 0, 2) = 3;
-	*mat_at(&m1, 1, 0) = 4;
-	*mat_at(&m1, 1, 1) = 5;
-	*mat_at(&m1, 1, 2) = 6;
+	*mat_at(&m1, 0, 0) = 1.f;
+	*mat_at(&m1, 0, 1) = 2.f;
+	*mat_at(&m1, 0, 2) = 3.f;
+	*mat_at(&m1, 1, 0) = 4.f;
+	*mat_at(&m1, 1, 1) = 5.f;
+	*mat_at(&m1, 1, 2) = 6.f;
 
 	/* m2: 3 rows, 2 cols */
-	*mat_at(&m2, 0, 0) = 1;
-	*mat_at(&m2, 0, 1) = 2;
-	*mat_at(&m2, 1, 0) = 3;
-	*mat_at(&m2, 1, 1) = 4;
-	*mat_at(&m2, 2, 0) = 5;
-	*mat_at(&m2, 2, 1) = 6;
+	*mat_at(&m2, 0, 0) = 1.f;
+	*mat_at(&m2, 0, 1) = 2.f;
+	*mat_at(&m2, 1, 0) = 3.f;
+	*mat_at(&m2, 1, 1) = 4.f;
+	*mat_at(&m2, 2, 0) = 5.f;
+	*mat_at(&m2, 2, 1) = 6.f;
+
+	/* m2: 1 rows, 3 cols */
+	*mat_at(&m4, 0, 0) = 1.f;
+	*mat_at(&m4, 0, 1) = -2.f;
+	*mat_at(&m4, 0, 2) = 3.f;
 
 	logger("Matrix operations...\n", INFO);
 	struct Matrix2D m3 = mat_mul(&m1, &m2);
@@ -48,10 +55,16 @@ int main() {
 	logger("Identity:\n", DEBUG);
 	mat_print(&m_i);
 
+	struct Matrix2D m5 = relu(&m4);
+	logger("Relu:\n", DEBUG);
+	mat_print(&m5);
+
 	logger("Deallocate memory...\n", DEBUG);
 	mat_free(&m1);
 	mat_free(&m2);
 	mat_free(&m3);
+	mat_free(&m4);
+	mat_free(&m5);
 	mat_free(&m3_t);
 	mat_free(&m_i);
 
