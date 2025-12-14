@@ -64,7 +64,7 @@ retrolm/
 
 1. **Clone the repository:**
 ```bash
-   git clone <repository-url>
+   git clone https://github.com/agaz1985/retrolm.git
    cd retrolm
 ```
 
@@ -111,30 +111,6 @@ make clean-docker # Remove Docker image
 make help         # Show all commands
 ```
 
-### Assembly Code Architecture
-
-The project uses conditional assembly to support both development (Linux ELF) and deployment (DOS COFF) formats:
-```nasm
-BITS 32
-
-section .text
-
-; Export with underscore for COFF (DOS), without for ELF (Linux)
-%ifdef COFF
-    global _add_numbers
-    _add_numbers:
-%else
-    global add_numbers
-    add_numbers:
-%endif
-    push ebp
-    mov ebp, esp
-    mov eax, [ebp+8]
-    add eax, [ebp+12]
-    pop ebp
-    ret
-```
-
 ### Build Toolchain Details
 
 - **Assembler:** NASM (Netwide Assembler)
@@ -176,30 +152,6 @@ I wanted to find out what happens when you take one of the most resource-intensi
 
 - **The C Programming Language** (2nd Edition) - Brian W. Kernighan & Dennis M. Ritchie
 - **The Art of Assembly Language** - Randall Hyde
-
-## 📝 License
-
-MIT License
-
-Copyright (c) 2025 [Angelo Zuffianò]
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
 
 ## 🙏 Acknowledgments
 

@@ -3,19 +3,14 @@
 
 #include "memory.h"
 
-float** alloc_mat(unsigned int r, unsigned int c) {
-	float **m;
-	m = malloc(r * sizeof(*m));
-	for (unsigned int i = 0; i < r; ++i) {
-		m[i] = malloc(c * sizeof(*m[i]));
-		memset(m[i], 0, c * sizeof(*m[i]));
-	}
+float* alloc_mat(unsigned int r, unsigned int c) {
+	float *m = (float*)malloc(r * c * sizeof(float));
+	memset(m, 0, r * c * sizeof(float));
 	return m;
 }
 
-void free_mat(float** m, unsigned int r) {
-	for (unsigned int i = 0; i < r; ++i) {
-		free(m[i]);
-	}
+void free_mat(float *m) {
 	free(m);
 }
+
+
