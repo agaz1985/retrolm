@@ -11,7 +11,7 @@ echo "Assembling..."
 # nasm -f coff -dCOFF ../src/matmul.asm -o matmul.o
 
 echo "Compiling with DJGPP for DOS..."
-SOURCES="../src/activations.c ../src/exceptions.c ../src/logger.c ../src/main.c ../src/matrix.c ../src/matrix_ops.c ../src/memory.c"
+SOURCES="../src/activations.c ../src/exceptions.c ../src/layers.c ../src/logger.c ../src/main.c ../src/matrix.c ../src/matrix_ops.c ../src/memory.c"
 CFLAGS="-Wall -Wextra -O2"
 
 i586-pc-msdosdjgpp-gcc $CFLAGS $SOURCES -o retrollm.exe

@@ -1,5 +1,7 @@
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "logger.h"
 #include "matrix.h"
@@ -71,13 +73,46 @@ struct Matrix2D mat_mul(const struct Matrix2D *m1, const struct Matrix2D *m2) {
   return res;
 }
 
+struct Matrix2D mat_add(const struct Matrix2D *m1, const struct Matrix2D *m2) {
+  if (m2->r == 1 && m1->c != m2->c) {
+    throw ("Unable to broadcast, matrix columns do not match!\n", InvalidInput);  	
+  }
+  if (m2->c == 1 && m1->r != m2->r) {
+    throw ("Unable to broadcast, matrix rows do not match!\n", InvalidInput);  	
+  }
+  if (m2->r != 1 && m1->r != m2->r) {
+    throw ("Matrix rows do not match!\n", InvalidInput);
+  }
+  if (m2->c != 1 && m1->c != m2->c) {
+    throw ("Matrix columns do not match!\n", InvalidInput);
+  }
+
+  struct Matrix2D res = mat_new(m1->c, m1->r);
+
+  if ((m1->r == m2->r) && (m1->c == m2->c)) {
+  	_matadd(m1->data, m2->data, res.data, m1->r, m1->c);
+  } else if (m2->r == 1) {
+  	_matadd_rowbroadcast(m1->data, m2->data, res.data, m1->r, m1->c);
+  } else {
+  	assert(m2->c == 1);
+  	_matadd_colbroadcast(m1->data, m2->data, res.data, m1->r, m1->c);
+  }
+  return res;
+}
+
+struct Matrix2D mat_exp(const struct Matrix2D *m) {
+	struct Matrix2D res = mat_new(m->c, m->r);
+	_matexp(m->data, res.data, m->r, m->c);
+	return res;
+}
+
 /* scalar operations (in-place) */
 void mat_scale(struct Matrix2D *m, float alpha) {
-	_matscale(m->data, m->r * m->c, alpha);
+	_matscale(m->data, m->r, m->c, alpha);
 }
 
 void mat_shift(struct Matrix2D *m, float beta) {
-	_matshift(m->data, m->r * m->c, beta);
+	_matshift(m->data, m->r, m->c, beta);
 }
 
 /* special matrices / transforms */
@@ -109,18 +144,25 @@ struct Matrix2D mat_clamp(const struct Matrix2D *m, float lo, float hi) {
 	}
 
 	struct Matrix2D res = mat_copy(m);
-	_matclamp(res.data, res.r * res.c, lo, hi);
+	_matclamp(res.data, res.r, res.c, lo, hi);
 	return res;
 }
 
 struct Matrix2D mat_clamp_min(const struct Matrix2D *m, float lo) {
 	struct Matrix2D res = mat_copy(m);
-	_matclampmin(res.data, res.r * res.c, lo);
+	_matclampmin(res.data, res.r, res.c, lo);
 	return res;
 }
 
 struct Matrix2D mat_clamp_max(const struct Matrix2D *m, float hi) {
 	struct Matrix2D res = mat_copy(m);
-	_matclampmax(res.data, res.r * res.c, hi);
+	_matclampmax(res.data, res.r, res.c, hi);
 	return res;
+}
+
+void mat_random_init(struct Matrix2D *m) {
+	const unsigned int n = m->r * m->c;
+	for (unsigned int i = 0; i < n; ++i) {
+		m->data[i] = (float)rand() / RAND_MAX;
+	}
 }

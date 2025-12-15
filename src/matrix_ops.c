@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include "matrix_ops.h"
 
 #define BLOCK 8 // Small block for 16KB L1 cache of Pentium II
@@ -43,6 +45,34 @@ void _matmul(const float *m1, const float *m2, float *res, unsigned int r1, unsi
   }
 }
 
+void _matadd(const float *m1, const float *m2, float *res, unsigned int r1, unsigned int c1) {
+  const unsigned int n = r1 * c1;
+  for (unsigned int i = 0; i < n; ++i) {
+    res[i] = m1[i] + m2[i];
+  }
+}
+
+void _matadd_rowbroadcast(const float *m1, const float *m2, float *res, unsigned int r1, unsigned int c1) {
+  const unsigned int n = r1 * c1;
+  for (unsigned int i = 0; i < n; ++i) {
+    res[i] = m1[i] + m2[i % c1];
+  }
+}
+
+void _matadd_colbroadcast(const float *m1, const float *m2, float *res, unsigned int r1, unsigned int c1) {
+  const unsigned int n = r1 * c1;
+  for (unsigned int i = 0; i < n; ++i) {
+    res[i] = m1[i] + m2[i / c1];
+  }
+}
+
+void _matexp(float *m, float *res, unsigned int r, unsigned int c) {
+  const unsigned int n = r * c;
+  for (unsigned int i = 0; i < n; ++i) {
+    res[i] = exp(m[i]);
+  }
+}
+
 void _mattranspose(const float *m, unsigned int r, unsigned int c, float *res) {
   unsigned int i, j, ii, jj;
   unsigned int i_max, j_max;
@@ -58,32 +88,37 @@ void _mattranspose(const float *m, unsigned int r, unsigned int c, float *res) {
   }
 }
 
-void _matscale(float *m, unsigned int n, float alpha) {
+void _matscale(float *m, unsigned int r, unsigned int c, float alpha) {
+  const unsigned int n = r * c;
   for (unsigned int i = 0; i < n; ++i) {
     m[i] *= alpha;
   }
 }
 
-void _matshift(float *m, unsigned int n, float beta) {
+void _matshift(float *m, unsigned int r, unsigned int c, float beta) {
+  const unsigned int n = r * c;
   for (unsigned int i = 0; i < n; ++i) {
     m[i] += beta;
   }
 }
 
-void _matclamp(float *m, unsigned int n, float lo, float hi) {
+void _matclamp(float *m, unsigned int r, unsigned int c, float lo, float hi) {
+  const unsigned int n = r * c;
   for (unsigned int i = 0; i < n; ++i) {
     m[i] = max(lo, m[i]);
     m[i] = min(hi, m[i]);
   }
 }
 
-void _matclampmin(float *m, unsigned int n, float lo) {
+void _matclampmin(float *m, unsigned int r, unsigned int c, float lo) {
+  const unsigned int n = r * c;
   for (unsigned int i = 0; i < n; ++i) {
     m[i] = max(lo, m[i]);
   }
 }
 
-void _matclampmax(float *m, unsigned int n, float hi) {
+void _matclampmax(float *m, unsigned int r, unsigned int c, float hi) {
+  const unsigned int n = r * c;
   for (unsigned int i = 0; i < n; ++i) {
     m[i] = min(hi, m[i]);
   }

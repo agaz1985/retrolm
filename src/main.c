@@ -5,6 +5,7 @@
 #include "logger.h"
 #include "matrix.h"
 #include "activations.h"
+#include "layers.h"
 
 int main() {
 	logger("Allocate memory...\n", DEBUG);
@@ -59,6 +60,14 @@ int main() {
 	logger("Relu:\n", DEBUG);
 	mat_print(&m5);
 
+	// Try linear layer.
+	struct LinearParameters linear_params = linear_new(2, 5);
+	linear_random_init(&linear_params);
+
+	struct Matrix2D y = linear_forward(&m2, &linear_params);
+	logger("Linear:\n", DEBUG);
+	mat_print(&y);
+
 	logger("Deallocate memory...\n", DEBUG);
 	mat_free(&m1);
 	mat_free(&m2);
@@ -67,6 +76,8 @@ int main() {
 	mat_free(&m5);
 	mat_free(&m3_t);
 	mat_free(&m_i);
+	linear_free(&linear_params);
+	mat_free(&y);
 
 	return 0;
 }
