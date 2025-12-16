@@ -6,8 +6,12 @@
 #include "matrix.h"
 #include "activations.h"
 #include "layers.h"
+#include "utils.h"
+#include "transformer.h"
 
 int main() {
+	print_retrolm();
+
 	logger("Allocate memory...\n", DEBUG);
 
 	struct Matrix2D m1 = mat_new(2, 3);
@@ -68,6 +72,9 @@ int main() {
 	logger("Linear:\n", DEBUG);
 	mat_print(&y);
 
+	// Try transformer.
+	struct TransformerParameters transformer = transformer_new(8, 12, 4, 5);
+
 	logger("Deallocate memory...\n", DEBUG);
 	mat_free(&m1);
 	mat_free(&m2);
@@ -78,6 +85,7 @@ int main() {
 	mat_free(&m_i);
 	linear_free(&linear_params);
 	mat_free(&y);
+	transformer_free(&transformer);
 
 	return 0;
 }

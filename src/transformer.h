@@ -6,7 +6,7 @@
 
 struct TransformerParameters {
 	/* Embeddings */
-	struct EmbeddingParameters token_embed; // TODO AGAZ: HERE! = nn.Embedding(VOCAB_SIZE, EMBED_DIM)
+	struct EmbeddingsParameters token_embed;
 	struct Matrix2D pos_embed;
 
 	/* Attention linear projections */

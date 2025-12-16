@@ -44,6 +44,8 @@ struct Matrix2D mat_clamp(const struct Matrix2D *m, float lo, float hi);
 struct Matrix2D mat_clamp_min(const struct Matrix2D *m, float lo);
 struct Matrix2D mat_clamp_max(const struct Matrix2D *m, float hi);
 
+struct Matrix2D mat_rowselect(const struct Matrix2D *m, const unsigned int *indices, unsigned int n_indices);
+
 void mat_random_init(struct Matrix2D *m);
 
 #endif // _RLM_MATRIX_H

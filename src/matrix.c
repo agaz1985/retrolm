@@ -183,7 +183,7 @@ struct Matrix2D mat_copy(const struct Matrix2D *m) {
 
 struct Matrix2D mat_clamp(const struct Matrix2D *m, float lo, float hi) {
 	if (lo >= hi) {
-		throw ("Low value must be strictly lower than the high value!\n", InvalidInput);
+		throw("Low value must be strictly lower than the high value!\n", InvalidInput);
 	}
 
 	struct Matrix2D res = mat_copy(m);
@@ -200,6 +200,23 @@ struct Matrix2D mat_clamp_min(const struct Matrix2D *m, float lo) {
 struct Matrix2D mat_clamp_max(const struct Matrix2D *m, float hi) {
 	struct Matrix2D res = mat_copy(m);
 	_matclampmax(res.data, res.r, res.c, hi);
+	return res;
+}
+
+struct Matrix2D mat_rowselect(const struct Matrix2D *m, const unsigned int *indices, unsigned int n_indices) {
+	if (n_indices > m->r) {
+		throw("The number of requested indices is higher than the number of matrix rows!\n", InvalidInput);
+	}
+  for (unsigned int i = 0; i < n_indices; ++i) {
+      if (indices[i] >= m->r) {
+          throw("Index out of bounds!\n", InvalidInput);
+      }
+  }
+
+	struct Matrix2D res = mat_new(n_indices, m->c);
+	for (unsigned int i = 0; i < n_indices; ++i) {
+		memcpy(res.data + i*m->c, m->data + indices[i]*m->c, m->c * sizeof(float));
+	}
 	return res;
 }
 
