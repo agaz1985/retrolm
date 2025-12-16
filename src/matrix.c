@@ -73,21 +73,48 @@ struct Matrix2D mat_mul(const struct Matrix2D *m1, const struct Matrix2D *m2) {
   return res;
 }
 
+struct Matrix2D mat_div(const struct Matrix2D *m1, const struct Matrix2D *m2) {
+  if (m2->r == 1 && m1->c != m2->c) {
+    throw ("Unable to broadcast, matrix columns do not match!\n", InvalidInput);  	
+  }
+  if (m2->c == 1 && m1->r != m2->r) {
+    throw("Unable to broadcast, matrix rows do not match!\n", InvalidInput);  	
+  }
+  if (m2->r != 1 && m1->r != m2->r) {
+    throw("Matrix rows do not match!\n", InvalidInput);
+  }
+  if (m2->c != 1 && m1->c != m2->c) {
+    throw("Matrix columns do not match!\n", InvalidInput);
+  }
+
+  struct Matrix2D res = mat_new(m1->r, m1->c);
+
+  if ((m1->r == m2->r) && (m1->c == m2->c)) {
+  	_matdiv(m1->data, m2->data, res.data, m1->r, m1->c);
+  } else if (m2->r == 1) {
+  	_matdiv_rowbroadcast(m1->data, m2->data, res.data, m1->r, m1->c);
+  } else {
+  	assert(m2->c == 1);
+  	_matdiv_colbroadcast(m1->data, m2->data, res.data, m1->r, m1->c);
+  }
+  return res;
+}
+
 struct Matrix2D mat_add(const struct Matrix2D *m1, const struct Matrix2D *m2) {
   if (m2->r == 1 && m1->c != m2->c) {
     throw ("Unable to broadcast, matrix columns do not match!\n", InvalidInput);  	
   }
   if (m2->c == 1 && m1->r != m2->r) {
-    throw ("Unable to broadcast, matrix rows do not match!\n", InvalidInput);  	
+    throw("Unable to broadcast, matrix rows do not match!\n", InvalidInput);  	
   }
   if (m2->r != 1 && m1->r != m2->r) {
-    throw ("Matrix rows do not match!\n", InvalidInput);
+    throw("Matrix rows do not match!\n", InvalidInput);
   }
   if (m2->c != 1 && m1->c != m2->c) {
-    throw ("Matrix columns do not match!\n", InvalidInput);
+    throw("Matrix columns do not match!\n", InvalidInput);
   }
 
-  struct Matrix2D res = mat_new(m1->c, m1->r);
+  struct Matrix2D res = mat_new(m1->r, m1->c);
 
   if ((m1->r == m2->r) && (m1->c == m2->c)) {
   	_matadd(m1->data, m2->data, res.data, m1->r, m1->c);
@@ -101,8 +128,24 @@ struct Matrix2D mat_add(const struct Matrix2D *m1, const struct Matrix2D *m2) {
 }
 
 struct Matrix2D mat_exp(const struct Matrix2D *m) {
-	struct Matrix2D res = mat_new(m->c, m->r);
+	struct Matrix2D res = mat_new(m->r, m->c);
 	_matexp(m->data, res.data, m->r, m->c);
+	return res;
+}
+
+struct Matrix2D mat_sum(const struct Matrix2D *m, unsigned short dim) {
+	if (dim > 1) {
+		throw("Invalid matrix dimension!\n", InvalidInput);
+	}
+
+	struct Matrix2D res;
+	if (dim == 0) {
+		res = mat_new(1, m->c);
+		_matsum_colwise(m->data, res.data, m->r, m->c);
+	} else {
+		res = mat_new(m->r, 1);
+		_matsum_rowwise(m->data, res.data, m->r, m->c);
+	}
 	return res;
 }
 

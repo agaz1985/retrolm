@@ -5,24 +5,27 @@
 #include "matrix.h"
 
 struct TransformerParameters {
-	// TODO AGAZ: self.pos_embed = nn.Parameter(torch.randn(SEQ_LEN, EMBED_DIM) * 0.1)
+	/* Embeddings */
+	struct EmbeddingParameters token_embed; // TODO AGAZ: HERE! = nn.Embedding(VOCAB_SIZE, EMBED_DIM)
+	struct Matrix2D pos_embed;
 
 	/* Attention linear projections */
-	struct SelfAttentionParameter attn;
+	struct SelfAttentionParameters attn;
 
 	/* Feed-forward */
-	struct LinearParameters W1; // = nn.Linear(EMBED_DIM, FF_DIM)
-	struct LinearParameters W2; // = nn.Linear(FF_DIM, EMBED_DIM)
+	struct LinearParameters W1;
+	struct LinearParameters W2;
 
 	/* LM head */
-	struct LinearParameters lm_head; // = nn.Linear(EMBED_DIM, VOCAB_SIZE, bias=False)
+	struct LinearParameters lm_head;
 };
 
-/* Linear layer with bias */
+/* Transformer layer */
 
-struct TransformerParameters transformer_new(unsigned int in_features, unsigned int out_features);
-void transformer_free(struct LinearParameters* p);
-struct Matrix2D transformer_forward(const struct Matrix2D *x, const struct LinearParameters *p);
-
+struct TransformerParameters transformer_new(unsigned int seq_len, unsigned int embeded_dim, unsigned int ff_dim, unsigned int vocab_size);
+struct TransformerParameters transformer_copy(const struct TransformerParameters *p);
+void transformer_random_init(struct TransformerParameters *p);
+void transformer_free(struct TransformerParameters* p);
+struct Matrix2D transformer_forward(const struct Matrix2D *x, const struct TransformerParameters *p);
 
 #endif // _RLM_TRANSFORMER_H

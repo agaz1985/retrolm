@@ -21,8 +21,11 @@ void mat_print(const struct Matrix2D *m);
 
 /* core linear algebra */
 struct Matrix2D mat_mul(const struct Matrix2D *m1, const struct Matrix2D *m2);
+
+struct Matrix2D mat_div(const struct Matrix2D *m1, const struct Matrix2D *m2);
 struct Matrix2D mat_add(const struct Matrix2D *m1, const struct Matrix2D *m2);
 struct Matrix2D mat_exp(const struct Matrix2D *m);
+struct Matrix2D mat_sum(const struct Matrix2D *m, unsigned short dim);
 
 /* scalar operations (in-place) */
 void mat_scale(struct Matrix2D *m, float alpha);

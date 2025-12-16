@@ -66,10 +66,49 @@ void _matadd_colbroadcast(const float *m1, const float *m2, float *res, unsigned
   }
 }
 
+void _matdiv(const float *m1, const float *m2, float *res, unsigned int r1, unsigned int c1) {
+  const unsigned int n = r1 * c1;
+  for (unsigned int i = 0; i < n; ++i) {
+    res[i] = m1[i] / m2[i];
+  }
+}
+
+void _matdiv_rowbroadcast(const float *m1, const float *m2, float *res, unsigned int r1, unsigned int c1) {
+  const unsigned int n = r1 * c1;
+  for (unsigned int i = 0; i < n; ++i) {
+    res[i] = m1[i] / m2[i % c1];
+  }
+}
+
+void _matdiv_colbroadcast(const float *m1, const float *m2, float *res, unsigned int r1, unsigned int c1) {
+  const unsigned int n = r1 * c1;
+  for (unsigned int i = 0; i < n; ++i) {
+    res[i] = m1[i] / m2[i / c1];
+  }
+}
+
 void _matexp(float *m, float *res, unsigned int r, unsigned int c) {
   const unsigned int n = r * c;
   for (unsigned int i = 0; i < n; ++i) {
     res[i] = exp(m[i]);
+  }
+}
+
+void _matsum_rowwise(float *m, float *res, unsigned int r, unsigned int c) {
+  for (unsigned int i = 0; i < r; ++i) {
+    res[i] = 0.0;
+    for (unsigned int j = 0; j < c; ++j) {
+      res[i] += m[i*c + j];
+    }
+  }
+}
+
+void _matsum_colwise(float *m, float *res, unsigned int r, unsigned int c) {
+  for (unsigned int i = 0; i < c; ++i) {
+    res[i] = 0.0;
+    for (unsigned int j = 0; j < r; ++j) {
+      res[i] += m[j*c + i];
+    }
   }
 }
 

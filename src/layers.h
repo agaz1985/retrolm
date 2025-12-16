@@ -8,7 +8,7 @@ struct LinearParameters {
 	struct Matrix2D bias;
 };
 
-struct SelfAttentionParameter {
+struct SelfAttentionParameters {
 	struct LinearParameters Wq;
 	struct LinearParameters Wk;
 	struct LinearParameters Wv;
@@ -25,10 +25,10 @@ struct Matrix2D linear_forward(const struct Matrix2D *x, const struct LinearPara
 
 /* Attention layer */
 
-struct SelfAttentionParameter attention_new(unsigned int embeded_dim);
-struct SelfAttentionParameter attention_copy(const struct SelfAttentionParameter *p);
-void attention_random_init(struct SelfAttentionParameter *p);
-void attention_free(struct SelfAttentionParameter* p);
-struct Matrix2D attention_forward(const struct Matrix2D *x, const struct SelfAttentionParameter *p);
+struct SelfAttentionParameters attention_new(unsigned int embeded_dim);
+struct SelfAttentionParameters attention_copy(const struct SelfAttentionParameters *p);
+void attention_random_init(struct SelfAttentionParameters *p);
+void attention_free(struct SelfAttentionParameters* p);
+struct Matrix2D attention_forward(const struct Matrix2D *x, const struct SelfAttentionParameters *p);
 
 #endif // _RLM_LAYERS_H

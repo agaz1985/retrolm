@@ -38,8 +38,8 @@ struct Matrix2D linear_forward(const struct Matrix2D *x, const struct LinearPara
 
 /* Attention layer */
 
-struct SelfAttentionParameter attention_new(unsigned int embeded_dim) {
-	struct SelfAttentionParameter params;
+struct SelfAttentionParameters attention_new(unsigned int embeded_dim) {
+	struct SelfAttentionParameters params;
 	params.Wq = mat_new(embeded_dim, embeded_dim);
 	params.Wk = mat_new(embeded_dim, embeded_dim);
 	params.Wv = mat_new(embeded_dim, embeded_dim);
@@ -47,8 +47,8 @@ struct SelfAttentionParameter attention_new(unsigned int embeded_dim) {
 	return params;
 }
 
-struct SelfAttentionParameter attention_copy(const struct SelfAttentionParameter *p) {
-	struct SelfAttentionParameter params;
+struct SelfAttentionParameters attention_copy(const struct SelfAttentionParameters *p) {
+	struct SelfAttentionParameters params;
 	params.Wq = mat_copy(&p->Wq);
 	params.Wk = mat_copy(&p->Wk);
 	params.Wv = mat_copy(&p->Wv);
@@ -56,21 +56,21 @@ struct SelfAttentionParameter attention_copy(const struct SelfAttentionParameter
 	return params;
 }
 
-void attention_random_init(struct SelfAttentionParameter *p) {
+void attention_random_init(struct SelfAttentionParameters *p) {
 	mat_random_init(&p->Wq);
 	mat_random_init(&p->Wk);
 	mat_random_init(&p->Wv);
 	mat_random_init(&p->Wo);
 }
 
-void attention_free(struct SelfAttentionParameter* p) {
+void attention_free(struct SelfAttentionParameters* p) {
 	mat_free(&p->Wq);
 	mat_free(&p->Wk);
 	mat_free(&p->Wv);
 	mat_free(&p->Wo);
 }
 
-struct Matrix2D attention_forward(const struct Matrix2D *x, const struct SelfAttentionParameter *p) {
+struct Matrix2D attention_forward(const struct Matrix2D *x, const struct SelfAttentionParameters *p) {
 	const struct Matrix2D Q = mat_mul(x, &p->Wq);
 	const struct Matrix2D K = mat_mul(x, &p->Wk);
 	const struct Matrix2D V = mat_mul(x, &p->Wv);
