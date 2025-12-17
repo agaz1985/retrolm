@@ -107,7 +107,7 @@ void embeddings_free(struct EmbeddingsParameters* p) {
 	mat_free(&p->weight_matrix);
 }
 
-struct Matrix2D embeddings_forward(const unsigned int *indices, unsigned int n_indices, const struct EmbeddingsParameters *p) {
-	struct Matrix2D embedding_vectors = mat_rowselect(&p->weight_matrix, indices, n_indices);
+struct Matrix2D embeddings_forward(const struct Matrix2D_UInt *indices, const struct EmbeddingsParameters *p) {
+	struct Matrix2D embedding_vectors = mat_rowselect(&p->weight_matrix, indices);
 	return embedding_vectors;
 }

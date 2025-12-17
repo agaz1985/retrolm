@@ -26,6 +26,6 @@ struct TransformerParameters transformer_new(unsigned int seq_len, unsigned int 
 struct TransformerParameters transformer_copy(const struct TransformerParameters *p);
 void transformer_random_init(struct TransformerParameters *p);
 void transformer_free(struct TransformerParameters* p);
-struct Matrix2D transformer_forward(const struct Matrix2D *x, const struct TransformerParameters *p);
+struct Matrix2D transformer_forward(const struct Matrix2D_UInt *x, const struct TransformerParameters *p);
 
 #endif // _RLM_TRANSFORMER_H

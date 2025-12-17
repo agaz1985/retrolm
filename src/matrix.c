@@ -17,16 +17,47 @@ struct Matrix2D mat_new(unsigned int r, unsigned int c) {
 		throw("Matrix number of columns cannot be zero.\n", InvalidInput);
 	}
 
-	float *data = alloc_mat(r, c);
+	float *data = alloc_mat_float(r, c);
 	struct Matrix2D m = {r, c, data};
 	return m;
 }
 
 void mat_free(struct Matrix2D *m) {
-	free_mat(m->data);
+	free_mat_float(m->data);
 	m->data = NULL;
 	m->r = 0;
 	m->c = 0;
+}
+
+struct Matrix2D_UInt mat_uint_new(unsigned int r, unsigned int c) {
+	if (r == 0) {
+		throw("Matrix number of rows cannot be zero.\n", InvalidInput);
+	}
+	if (c == 0) {
+		throw("Matrix number of columns cannot be zero.\n", InvalidInput);
+	}
+
+	unsigned int *data = alloc_mat_uint(r, c);
+	struct Matrix2D_UInt m = {r, c, data};
+	return m;
+}
+
+void mat_uint_free(struct Matrix2D_UInt *m) {
+	free_mat_uint(m->data);
+	m->data = NULL;
+	m->r = 0;
+	m->c = 0;
+}
+
+struct Matrix2D_UInt indices_new(unsigned int n) {
+	if (n == 0) {
+		throw("Number of indices cannot be zero.\n", InvalidInput);
+	}
+	struct Matrix2D_UInt indices = mat_uint_new(1, n);
+	for (unsigned int i = 0; i < n; ++i) {
+		indices.data[i] = i;
+	}
+	return indices;
 }
 
 float* mat_at(const struct Matrix2D *m, unsigned int i, unsigned int j) {
@@ -203,19 +234,24 @@ struct Matrix2D mat_clamp_max(const struct Matrix2D *m, float hi) {
 	return res;
 }
 
-struct Matrix2D mat_rowselect(const struct Matrix2D *m, const unsigned int *indices, unsigned int n_indices) {
+struct Matrix2D mat_rowselect(const struct Matrix2D *m, const struct Matrix2D_UInt *indices) {
+	if (indices->r != 1) {
+		throw("Number of rows must be equal to 1.\n", InvalidInput);
+	}
+
+	const unsigned int n_indices = indices->c;
 	if (n_indices > m->r) {
 		throw("The number of requested indices is higher than the number of matrix rows!\n", InvalidInput);
 	}
   for (unsigned int i = 0; i < n_indices; ++i) {
-      if (indices[i] >= m->r) {
+      if (indices->data[i] >= m->r) {
           throw("Index out of bounds!\n", InvalidInput);
       }
   }
 
 	struct Matrix2D res = mat_new(n_indices, m->c);
 	for (unsigned int i = 0; i < n_indices; ++i) {
-		memcpy(res.data + i*m->c, m->data + indices[i]*m->c, m->c * sizeof(float));
+		memcpy(res.data + i*m->c, m->data + indices->data[i]*m->c, m->c * sizeof(float));
 	}
 	return res;
 }

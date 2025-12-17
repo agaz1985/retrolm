@@ -41,7 +41,7 @@ struct EmbeddingsParameters embeddings_new(unsigned int vocab_size, unsigned int
 struct EmbeddingsParameters embeddings_copy(const struct EmbeddingsParameters *p);
 void embeddings_random_init(struct EmbeddingsParameters *p);
 void embeddings_free(struct EmbeddingsParameters* p);
-struct Matrix2D embeddings_forward(const unsigned int *indices, unsigned int n_indices, const struct EmbeddingsParameters *p);
+struct Matrix2D embeddings_forward(const struct Matrix2D_UInt *indices, const struct EmbeddingsParameters *p);
 
 
 #endif // _RLM_LAYERS_H

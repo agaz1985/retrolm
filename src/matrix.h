@@ -7,9 +7,20 @@ struct Matrix2D {
 	float* data;
 };
 
+struct Matrix2D_UInt {
+	unsigned int r;
+	unsigned int c;
+	unsigned int* data;
+};
+
 /* construction / destruction */
 struct Matrix2D mat_new(unsigned int r, unsigned int c);
 void mat_free(struct Matrix2D *m);
+
+struct Matrix2D_UInt mat_uint_new(unsigned int r, unsigned int c);
+void mat_uint_free(struct Matrix2D_UInt *m);
+
+struct Matrix2D_UInt indices_new(unsigned int n);
 
 /* element access */
 float *mat_at(const struct Matrix2D *m,
@@ -44,7 +55,7 @@ struct Matrix2D mat_clamp(const struct Matrix2D *m, float lo, float hi);
 struct Matrix2D mat_clamp_min(const struct Matrix2D *m, float lo);
 struct Matrix2D mat_clamp_max(const struct Matrix2D *m, float hi);
 
-struct Matrix2D mat_rowselect(const struct Matrix2D *m, const unsigned int *indices, unsigned int n_indices);
+struct Matrix2D mat_rowselect(const struct Matrix2D *m, const struct Matrix2D_UInt *indices);
 
 void mat_random_init(struct Matrix2D *m);
 

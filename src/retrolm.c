@@ -73,7 +73,13 @@ int main() {
 	mat_print(&y);
 
 	// Try transformer.
+	logger("Transformer...\n", DEBUG);
 	struct TransformerParameters transformer = transformer_new(8, 12, 4, 5);
+	transformer_random_init(&transformer);
+
+	struct Matrix2D_UInt seq = indices_new(3);
+    struct Matrix2D logit = transformer_forward(&seq, &transformer);
+    mat_print(&logit);
 
 	logger("Deallocate memory...\n", DEBUG);
 	mat_free(&m1);
@@ -83,6 +89,8 @@ int main() {
 	mat_free(&m5);
 	mat_free(&m3_t);
 	mat_free(&m_i);
+	mat_free(&logit);
+	mat_uint_free(&seq);
 	linear_free(&linear_params);
 	mat_free(&y);
 	transformer_free(&transformer);
