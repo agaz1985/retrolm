@@ -1,10 +1,8 @@
 #include <math.h>
-
 #include "activations.h"
 #include "layers.h"
 
 /* Linear layer with bias */
-
 struct LinearParameters linear_new(unsigned int in_features, unsigned int out_features) {
 	struct LinearParameters params;
 	params.weights = mat_new(out_features, in_features);
@@ -31,19 +29,23 @@ void linear_free(struct LinearParameters* p) {
 
 struct Matrix2D linear_forward(const struct Matrix2D *x, const struct LinearParameters *p) {
 	/* y = xA_t + b */
-	const struct Matrix2D weights_t = mat_transpose(&p->weights);
-	const struct Matrix2D product = mat_mul(x, &weights_t);
-	return mat_add(&product, &p->bias);
+	struct Matrix2D weights_t = mat_transpose(&p->weights);
+	struct Matrix2D product = mat_mul(x, &weights_t);
+	struct Matrix2D result = mat_add(&product, &p->bias);
+	
+	mat_free(&weights_t);
+	mat_free(&product);
+	
+	return result;
 }
 
 /* Attention layer */
-
-struct SelfAttentionParameters attention_new(unsigned int embeded_dim) {
+struct SelfAttentionParameters attention_new(unsigned int embed_dim) {
 	struct SelfAttentionParameters params;
-	params.Wq = linear_new(embeded_dim, embeded_dim);
-	params.Wk = linear_new(embeded_dim, embeded_dim);
-	params.Wv = linear_new(embeded_dim, embeded_dim);
-	params.Wo = linear_new(embeded_dim, embeded_dim);
+	params.Wq = linear_new(embed_dim, embed_dim);
+	params.Wk = linear_new(embed_dim, embed_dim);
+	params.Wv = linear_new(embed_dim, embed_dim);
+	params.Wo = linear_new(embed_dim, embed_dim);
 	return params;
 }
 
@@ -71,25 +73,46 @@ void attention_free(struct SelfAttentionParameters* p) {
 }
 
 struct Matrix2D attention_forward(const struct Matrix2D *x, const struct SelfAttentionParameters *p) {
-	const struct Matrix2D Q = linear_forward(x, &p->Wq);
-	const struct Matrix2D K = linear_forward(x, &p->Wk);
-	const struct Matrix2D V = linear_forward(x, &p->Wv);
-
-	const struct Matrix2D K_t = mat_transpose(&K);
+	// Compute Q, K, V
+	struct Matrix2D Q = linear_forward(x, &p->Wq);
+	struct Matrix2D K = linear_forward(x, &p->Wk);
+	struct Matrix2D V = linear_forward(x, &p->Wv);
+	
+	// Compute attention scores: Q * K^T
+	struct Matrix2D K_t = mat_transpose(&K);
 	struct Matrix2D scores = mat_mul(&Q, &K_t);
-
-	const unsigned int embded_dim = p->Wq.weights.r;
-	mat_scale(&scores, 1.0 / sqrt(embded_dim));
-
-	const struct Matrix2D weights = softmax(&scores);
-	const struct Matrix2D attention_out = mat_mul(&weights, &V);
-	const struct Matrix2D residual = linear_forward(&attention_out, &p->Wo);
-	return mat_add(x, &residual);
+	mat_free(&Q);
+	mat_free(&K);
+	mat_free(&K_t);
+	
+	// Scale by sqrt(d_k)
+	const unsigned int embed_dim = p->Wq.weights.r;
+	mat_scale(&scores, 1.0 / sqrt(embed_dim));
+	
+	// Apply softmax
+	struct Matrix2D weights = softmax(&scores);
+	mat_free(&scores);
+	
+	// Compute attention output: weights * V
+	struct Matrix2D attention_out = mat_mul(&weights, &V);
+	mat_free(&weights);
+	mat_free(&V);
+	
+	// Apply output projection
+	struct Matrix2D residual = linear_forward(&attention_out, &p->Wo);
+	mat_free(&attention_out);
+	
+	// Add residual connection
+	struct Matrix2D result = mat_add(x, &residual);
+	mat_free(&residual);
+	
+	return result;
 }
 
-struct EmbeddingsParameters embeddings_new(unsigned int vocab_size, unsigned int embeded_dim) {
+/* Embeddings layer */
+struct EmbeddingsParameters embeddings_new(unsigned int vocab_size, unsigned int embed_dim) {
 	struct EmbeddingsParameters params;
-	params.weight_matrix = mat_new(vocab_size, embeded_dim);
+	params.weight_matrix = mat_new(vocab_size, embed_dim);
 	return params;
 }
 

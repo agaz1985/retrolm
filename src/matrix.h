@@ -35,8 +35,10 @@ struct Matrix2D mat_mul(const struct Matrix2D *m1, const struct Matrix2D *m2);
 
 struct Matrix2D mat_div(const struct Matrix2D *m1, const struct Matrix2D *m2);
 struct Matrix2D mat_add(const struct Matrix2D *m1, const struct Matrix2D *m2);
+struct Matrix2D mat_sub(const struct Matrix2D *m1, const struct Matrix2D *m2);
 struct Matrix2D mat_exp(const struct Matrix2D *m);
 struct Matrix2D mat_sum(const struct Matrix2D *m, unsigned short dim);
+struct Matrix2D mat_max(const struct Matrix2D *m, unsigned short dim);
 
 /* scalar operations (in-place) */
 void mat_scale(struct Matrix2D *m, float alpha);

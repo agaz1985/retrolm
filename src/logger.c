@@ -24,8 +24,10 @@ void logger(char msg[], enum LogLevel level) {
 
 		if (level == ERROR) {
 			fprintf(stderr, "%s | %s: %s", buffer, prefix, msg);
+			fflush(stderr);
 		} else {
 			printf("%s | %s: %s", buffer, prefix, msg);
+			fflush(stdout);
 		}
 	}
 }

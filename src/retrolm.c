@@ -10,6 +10,7 @@
 #include "transformer.h"
 
 int main() {
+	setbuf(stderr, NULL);
 	print_retrolm();
 
 	logger("Allocate memory...\n", DEBUG);
@@ -74,7 +75,7 @@ int main() {
 
 	// Try transformer.
 	logger("Transformer...\n", DEBUG);
-	struct TransformerParameters transformer = transformer_new(8, 12, 4, 5);
+	struct TransformerParameters transformer = transformer_new(8, 16, 32, 256);
 	transformer_random_init(&transformer);
 
 	struct Matrix2D_UInt seq = indices_new(3);
