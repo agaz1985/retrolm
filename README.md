@@ -87,7 +87,7 @@ make run          # Build and run instantly for testing
 
 **Build for FreeDOS deployment:**
 ```bash
-make dos          # Creates build/retrollm.exe
+make dos          # Creates build/retrolm.exe
 ```
 
 **Interactive debugging:**
@@ -129,7 +129,7 @@ Development is performed on an **Apple M4 MacBook Air** using Docker for x86_64 
    make dos
 ```
 
-2. Transfer `build/retrollm.exe` to your Pentium II:
+2. Transfer `build/retrolm.exe` to your Pentium II:
    - Copy to USB drive (if motherboard supports USB)
    - Copy to 3.5" floppy disk
    - Transfer via serial/parallel cable
@@ -137,7 +137,7 @@ Development is performed on an **Apple M4 MacBook Air** using Docker for x86_64 
 
 3. Boot FreeDOS on the Pentium II and run:
 ```bash
-   C:\> retrollm.exe
+   C:\> retrolm.exe
 ```
 
 ---

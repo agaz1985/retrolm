@@ -61,4 +61,5 @@ dkms.conf
 .DS_Store
 
 # Build folder
-/build
+build/
+__pycache__/

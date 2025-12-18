@@ -1,102 +1,168 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
-#include "logger.h"
-#include "matrix.h"
-#include "activations.h"
-#include "layers.h"
-#include "utils.h"
 #include "transformer.h"
+#include "matrix.h"
+#include "utils.h"
+#include "loader.h"
+
+#define MAX_INPUT 256
+#define SEQ_LEN 8
+
+void generate_interactive(struct TransformerParameters *model, 
+                          const char *prompt,
+                          const char *history,
+                          unsigned int max_tokens) {
+    const unsigned int VOCAB_SIZE = 128;
+    
+    unsigned int history_len = history ? strlen(history) : 0;
+    unsigned int prompt_len = strlen(prompt);
+    unsigned int total_input_len = history_len + prompt_len;
+    
+    unsigned int buffer_size = total_input_len + max_tokens + 1;
+    unsigned int *all_tokens = malloc(buffer_size * sizeof(unsigned int));
+    
+    unsigned int pos = 0;
+    if (history) {
+        for (unsigned int i = 0; i < history_len; i++) {
+            all_tokens[pos++] = (unsigned int)(unsigned char)history[i];
+        }
+    }
+    
+    for (unsigned int i = 0; i < prompt_len; i++) {
+        all_tokens[pos++] = (unsigned int)(unsigned char)prompt[i];
+    }
+    
+    printf("%s", prompt);
+    fflush(stdout);
+    
+    for (unsigned int t = 0; t < max_tokens; t++) {
+        unsigned int current_len = pos;
+        unsigned int input_len = (current_len > SEQ_LEN) ? SEQ_LEN : current_len;
+        unsigned int start_pos = current_len - input_len;
+        
+        struct Matrix2D_UInt input = mat_uint_new(1, input_len);
+        for (unsigned int i = 0; i < input_len; i++) {
+            input.data[i] = all_tokens[start_pos + i];
+        }
+        
+        struct Matrix2D logits = transformer_forward(&input, model);
+        float *last_logits = logits.data + (input_len - 1) * VOCAB_SIZE;
+        
+        float max_logit = last_logits[0];
+        for (unsigned int i = 1; i < VOCAB_SIZE; i++) {
+            if (last_logits[i] > max_logit) max_logit = last_logits[i];
+        }
+        
+        float sum = 0.0f;
+        for (unsigned int i = 0; i < VOCAB_SIZE; i++) {
+            last_logits[i] = expf(last_logits[i] - max_logit);
+            sum += last_logits[i];
+        }
+        
+        for (unsigned int i = 0; i < VOCAB_SIZE; i++) {
+            last_logits[i] /= sum;
+        }
+        
+        unsigned int next_token = 0;
+        float max_prob = last_logits[0];
+        for (unsigned int i = 1; i < VOCAB_SIZE; i++) {
+            if (last_logits[i] > max_prob) {
+                max_prob = last_logits[i];
+                next_token = i;
+            }
+        }
+        
+        all_tokens[pos++] = next_token;
+        
+        if (next_token == '\n') {
+            printf("\n");
+            mat_uint_free(&input);
+            mat_free(&logits);
+            break;
+        }
+        
+        if (next_token >= 32 && next_token < 127) {
+            printf("%c", (char)next_token);
+        }
+        fflush(stdout);
+        
+        mat_uint_free(&input);
+        mat_free(&logits);
+    }
+    
+    free(all_tokens);
+}
 
 int main() {
-	setbuf(stderr, NULL);
-	print_retrolm();
+    setbuf(stderr, NULL);
+    setbuf(stdout, NULL);
+    
+    print_retrolm();
+    struct TransformerParameters model = load_model_weights("./torch_code/weights");
+    
+    printf("\n============================================================\n");
+    printf("RetroLM Interactive Chat (Context: %d chars)\n", SEQ_LEN);
+    printf("============================================================\n");
+    printf("Type 'quit' or 'exit' to end the conversation\n");
+    printf("============================================================\n\n");
+    
+    char history[SEQ_LEN + 1];
+    history[0] = '\0';
+    
+    char input[MAX_INPUT];
 
-	logger("Allocate memory...\n", DEBUG);
+    while (1) {
+        printf("You: ");
+        fflush(stdout);
+        
+        if (!fgets(input, MAX_INPUT, stdin)) {
+            break;
+        }
+        
+        size_t len = strlen(input);
+        if (len > 0 && input[len-1] == '\n') {
+            input[len-1] = '\0';
+            len--;
+        }
+        
+        if (strcmp(input, "quit") == 0 || strcmp(input, "exit") == 0) {
+            printf("\nGoodbye!\n");
+            break;
+        }
+        
+        if (len == 0) {
+            continue;
+        }
 
-	struct Matrix2D m1 = mat_new(2, 3);
-	struct Matrix2D m2 = mat_new(3, 2);
-	struct Matrix2D m4 = mat_new(1, 3);
-
-	/* m1: 2 rows, 3 cols */
-	*mat_at(&m1, 0, 0) = 1.f;
-	*mat_at(&m1, 0, 1) = 2.f;
-	*mat_at(&m1, 0, 2) = 3.f;
-	*mat_at(&m1, 1, 0) = 4.f;
-	*mat_at(&m1, 1, 1) = 5.f;
-	*mat_at(&m1, 1, 2) = 6.f;
-
-	/* m2: 3 rows, 2 cols */
-	*mat_at(&m2, 0, 0) = 1.f;
-	*mat_at(&m2, 0, 1) = 2.f;
-	*mat_at(&m2, 1, 0) = 3.f;
-	*mat_at(&m2, 1, 1) = 4.f;
-	*mat_at(&m2, 2, 0) = 5.f;
-	*mat_at(&m2, 2, 1) = 6.f;
-
-	/* m2: 1 rows, 3 cols */
-	*mat_at(&m4, 0, 0) = 1.f;
-	*mat_at(&m4, 0, 1) = -2.f;
-	*mat_at(&m4, 0, 2) = 3.f;
-
-	logger("Matrix operations...\n", INFO);
-	struct Matrix2D m3 = mat_mul(&m1, &m2);
-	logger("Multiply:\n", DEBUG);
-	mat_print(&m3);
-
-	mat_scale(&m3, 2.0);
-	logger("Scale:\n", DEBUG);
-	mat_print(&m3);
-
-	mat_shift(&m3, 10.0);
-	logger("Shift:\n", DEBUG);
-	mat_print(&m3);
-
-	struct Matrix2D m3_t = mat_transpose(&m3);
-	struct Matrix2D m_i = mat_identity(5);
-
-	logger("Transpose:\n", DEBUG);
-	mat_print(&m3_t);
-	logger("Identity:\n", DEBUG);
-	mat_print(&m_i);
-
-	struct Matrix2D m5 = relu(&m4);
-	logger("Relu:\n", DEBUG);
-	mat_print(&m5);
-
-	// Try linear layer.
-	struct LinearParameters linear_params = linear_new(2, 5);
-	linear_random_init(&linear_params);
-
-	struct Matrix2D y = linear_forward(&m2, &linear_params);
-	logger("Linear:\n", DEBUG);
-	mat_print(&y);
-
-	// Try transformer.
-	logger("Transformer...\n", DEBUG);
-	struct TransformerParameters transformer = transformer_new(8, 16, 32, 256);
-	transformer_random_init(&transformer);
-
-	struct Matrix2D_UInt seq = indices_new(3);
-    struct Matrix2D logit = transformer_forward(&seq, &transformer);
-
-    mat_print(&logit);
-
-	logger("Deallocate memory...\n", DEBUG);
-	// Free in reverse order of allocation
-	transformer_free(&transformer);
-	mat_free(&logit);
-	mat_uint_free(&seq);
-	mat_free(&y);
-	linear_free(&linear_params);
-	mat_free(&m_i);
-	mat_free(&m3_t);
-	mat_free(&m5);
-	mat_free(&m4);
-	mat_free(&m3);
-	mat_free(&m2);
-	mat_free(&m1);
-
-	return 0;
+        char temp_buffer[SEQ_LEN + MAX_INPUT + 2];
+        temp_buffer[0] = '\0';
+        
+        if (strlen(history) > 0) {
+            strcpy(temp_buffer, history);
+            strcat(temp_buffer, " ");
+        }
+        strcat(temp_buffer, input);
+        
+        size_t temp_len = strlen(temp_buffer);
+        
+        if (temp_len > SEQ_LEN) {
+            size_t offset = temp_len - SEQ_LEN;
+            strcpy(history, temp_buffer + offset);
+        } else {
+            strcpy(history, temp_buffer);
+        }
+        
+        printf("Bot: ");
+        fflush(stdout);
+        
+        generate_interactive(&model, "", history, 100);
+        
+        printf("\n");
+    }
+    
+    transformer_free(&model);
+    return 0;
 }

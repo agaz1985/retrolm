@@ -1,0 +1,22 @@
+Hello how are you?
+I am fine thank you.
+What is your name?
+My name is Sam.
+Nice to meet you Sam.
+Nice to meet you too.
+Where are you from?
+I am from London.
+How old are you?
+I am twenty years old.
+What do you do?
+I am a student.
+What do you study?
+I study computer science.
+That sounds interesting.
+Yes it is very interesting.
+Do you like programming?
+Yes I love programming.
+What language do you use?
+I use Python and C.
+Those are good languages.
+Thank you very much.

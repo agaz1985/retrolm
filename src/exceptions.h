@@ -5,6 +5,7 @@ enum ErrorType {
 	InvalidInput,
 	IndexError,
 	MemoryError,
+	FileError,
 };
 
 void throw(char msg[], enum ErrorType err);
