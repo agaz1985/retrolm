@@ -89,13 +89,8 @@ struct Matrix2D attention_forward(const struct Matrix2D *x, const struct SelfAtt
 	const unsigned int embed_dim = p->Wq.weights.r;
 	mat_scale(&scores, 1.0 / sqrt(embed_dim));
 
-	// Casual mask TODO AGAZ move to matrix
-	const unsigned int N = x->r;  // sequence length
-	for (unsigned int i = 0; i < N; i++) {
-		for (unsigned int j = i + 1; j < N; j++) {
-			*mat_at(&scores, i, j) = -HUGE_VALF;  // Mask future positions
-		}
-	}
+	// Casual mask
+	mat_maskdiag(&scores, -HUGE_VALF);
 
 	// Apply softmax
 	struct Matrix2D weights = softmax(&scores);

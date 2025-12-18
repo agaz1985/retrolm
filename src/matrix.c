@@ -70,6 +70,15 @@ float* mat_at(const struct Matrix2D *m, unsigned int i, unsigned int j) {
 	return &m->data[index];
 }
 
+void mat_maskdiag(struct Matrix2D *m, float value) {
+	const unsigned int N = m->r;
+	for (unsigned int i = 0; i < N; i++) {
+		for (unsigned int j = i + 1; j < N; j++) {
+			*mat_at(m, i, j) = value;
+		}
+	}
+}
+
 void mat_print(const struct Matrix2D *m)
 {
     char buffer[4096];

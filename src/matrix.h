@@ -27,6 +27,8 @@ float *mat_at(const struct Matrix2D *m,
               unsigned int i,
               unsigned int j);
 
+void mat_maskdiag(struct Matrix2D *m, float value);
+
 /* utilities */
 void mat_print(const struct Matrix2D *m);
 
