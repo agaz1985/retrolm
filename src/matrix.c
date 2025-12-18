@@ -72,23 +72,33 @@ float* mat_at(const struct Matrix2D *m, unsigned int i, unsigned int j) {
 
 void mat_print(const struct Matrix2D *m)
 {
-    unsigned int i, j;
     char buffer[4096];
     int offset = 0;
-
-    offset += sprintf(buffer + offset, "\n");
-
-    for (i = 0; i < m->r; ++i) {
-        for (j = 0; j < m->c; ++j) {
-            offset += sprintf(
-                buffer + offset,
-                "%f,",
-                *mat_at(m, i, j)
-            );
+    
+    offset += sprintf(buffer + offset, "\nMatrix [%u, %u]:\n", m->r, m->c);
+    
+    // Only print if small enough
+    if (m->r * m->c > 100) {
+        offset += sprintf(buffer + offset, "[Matrix too large to print, showing corner]\n");
+        unsigned int max_r = m->r < 5 ? m->r : 5;
+        unsigned int max_c = m->c < 10 ? m->c : 10;
+        
+        for (unsigned int i = 0; i < max_r; ++i) {
+            for (unsigned int j = 0; j < max_c; ++j) {
+                offset += sprintf(buffer + offset, "%.4f,", *mat_at(m, i, j));
+            }
+            offset += sprintf(buffer + offset, "...\n");
         }
-        offset += sprintf(buffer + offset, "\n");
+    } else {
+        // Print full matrix for small ones
+        for (unsigned int i = 0; i < m->r; ++i) {
+            for (unsigned int j = 0; j < m->c; ++j) {
+                offset += sprintf(buffer + offset, "%.4f,", *mat_at(m, i, j));
+            }
+            offset += sprintf(buffer + offset, "\n");
+        }
     }
-
+    
     logger(buffer, INFO);
 }
 

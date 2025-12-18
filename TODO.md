@@ -1,4 +1,5 @@
 #TODOs:
-- Transformer goes SEGFAULT;
-- Check forward implementations for memory deallocation. Check also other functions.
-- Implement proper Transformer.
+- Move masking to matrix
+- Train model and store weights
+- Implement torch weights loading and test it
+- Add doc and tests

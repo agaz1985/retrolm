@@ -3,7 +3,8 @@
 
 enum ErrorType {
 	InvalidInput,
-	IndexError
+	IndexError,
+	MemoryError,
 };
 
 void throw(char msg[], enum ErrorType err);

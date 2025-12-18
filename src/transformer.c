@@ -2,6 +2,7 @@
 #include "activations.h"
 #include "layers.h"
 #include "exceptions.h"
+#include <stdio.h>
 
 struct TransformerParameters transformer_new(unsigned int seq_len, unsigned int embeded_dim, unsigned int ff_dim, unsigned int vocab_size) {
 	struct TransformerParameters params;

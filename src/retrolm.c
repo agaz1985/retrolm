@@ -80,21 +80,23 @@ int main() {
 
 	struct Matrix2D_UInt seq = indices_new(3);
     struct Matrix2D logit = transformer_forward(&seq, &transformer);
+
     mat_print(&logit);
 
 	logger("Deallocate memory...\n", DEBUG);
-	mat_free(&m1);
-	mat_free(&m2);
-	mat_free(&m3);
-	mat_free(&m4);
-	mat_free(&m5);
-	mat_free(&m3_t);
-	mat_free(&m_i);
+	// Free in reverse order of allocation
+	transformer_free(&transformer);
 	mat_free(&logit);
 	mat_uint_free(&seq);
-	linear_free(&linear_params);
 	mat_free(&y);
-	transformer_free(&transformer);
+	linear_free(&linear_params);
+	mat_free(&m_i);
+	mat_free(&m3_t);
+	mat_free(&m5);
+	mat_free(&m4);
+	mat_free(&m3);
+	mat_free(&m2);
+	mat_free(&m1);
 
 	return 0;
 }
