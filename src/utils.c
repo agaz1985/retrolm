@@ -1,5 +1,15 @@
+/**
+ * @file utils.c
+ * @brief Implementation of utility functions
+ */
+
 #include <stdio.h>
 
+/**
+ * @brief Print RetroLM ASCII art banner to stdout
+ * 
+ * Displays colorful retro-styled banner with progress bar.
+ */
 void print_retrolm(void) {
     printf("\n");
     printf("    ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄\n");

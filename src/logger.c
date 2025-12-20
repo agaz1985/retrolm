@@ -1,8 +1,19 @@
+/**
+ * @file logger.c
+ * @brief Implementation of logging system
+ */
+
 #include <stdio.h>
 #include <time.h>
 
 #include "logger.h"
 
+/**
+ * @brief Log a timestamped message if level meets threshold
+ * 
+ * Formats message as: "DD-MM-YYYY HH:MM:SS | LEVEL: message"
+ * ERROR messages go to stderr, all others to stdout.
+ */
 void logger(char msg[], enum LogLevel level) {
 	const char* prefix;
 

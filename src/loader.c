@@ -1,9 +1,20 @@
+/**
+ * @file loader.c
+ * @brief Implementation of model weight loading from binary files
+ */
+
 #include "loader.h"
 #include "logger.h"
 #include "exceptions.h"
 
 #include <stdio.h>
 
+/**
+ * @brief Load a single weight matrix from binary file
+ * 
+ * Reads matrix dimensions (rows, cols) and data from a binary file.
+ * Format: [uint32 rows][uint32 cols][float32 data...]
+ */
 struct Matrix2D load_weight_matrix(const char *filepath) {
     FILE *f = fopen(filepath, "rb");
     if (!f) {
@@ -34,6 +45,14 @@ struct Matrix2D load_weight_matrix(const char *filepath) {
     return m;
 }
 
+/**
+ * @brief Load all transformer model weights from directory
+ * 
+ * Sequentially loads all weight matrices for the transformer model.
+ * Implements weight tying by copying token embeddings to LM head weights.
+ * 
+ * The function logs each weight file as it's loaded for debugging.
+ */
 struct TransformerParameters load_model_weights(const char *weights_dir) {
     char filepath[256];
     struct TransformerParameters p;

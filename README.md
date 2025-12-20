@@ -4,155 +4,64 @@
 
 # 🧠 Bringing Modern AI Inference to Ancient Silicon
 
-**retrolm** is a personal, challenging side-project: a complete Large Language Model (LLM) inference engine written from the ground up in **C and x86 Assembly**.
+**retrolm** is a transformer-based LLM inference engine written from scratch in **C and x86 Assembly**, designed to run on **Intel Pentium II** hardware with **FreeDOS**.
 
-The core goal is to run a simple transformer model on a machine it was never meant to touch: the **Intel Pentium II** architecture running **FreeDOS**. This project explores the true engineering overhead of deep learning by stripping away all modern frameworks and dependencies.
+## 🛠️ The Challenge
 
-## 🛠️ The Development Ethos (Hard Mode Activated)
-
-In building this, I deliberately chose constraints to understand the fundamentals and maximize the optimization challenge:
-
-* **Solo Development:** Every line of code was written by me alone.
-* **No AI Assistance:** I relied purely on my own knowledge and classic documentation, avoiding LLMs for coding the LLM.
-* **Minimalist Tooling:** Development was done primarily using a plain text editor, bypassing the comfort of modern IDE features like advanced autocompletion or dynamic debugging.
-* **Classic References:** My primary guides were physical manuals: *The C Programming Language* (K&R) and *The Art of Assembly Language* (Hyde).
-
-## 💾 Core Technical Details
-
-* **Zero Dependencies:** The project contains no external libraries (no PyTorch, NumPy, or specialized BLAS). I wrote all custom math and linear algebra kernels myself.
-* **32-bit x86 Assembly:** Hand-optimized assembly routines for performance-critical operations.
-* **DJGPP Toolchain:** Cross-compiled using DJGPP (DOS port of GCC) for maximum compatibility with FreeDOS.
+* **Zero Dependencies:** No PyTorch, NumPy, or BLAS—all linear algebra written from scratch
+* **No AI Assistance:** Core implementation written without LLMs *(documentation and tests were LLM-assisted for efficiency)*
+* **32-bit x86 Assembly:** Hand-optimized routines for critical operations
+* **Classic References:** K&R's *C Programming Language* and Hyde's *Art of Assembly Language*
+* **Cross-Compiled:** DJGPP toolchain targeting FreeDOS
 
 ---
 
-# 🖥️ Required Target Hardware
+## 🖥️ Target Hardware
 
-To run `retrolm`, you'll be aiming for the following vintage specifications. Results will vary *greatly* based on clock speed and available RAM.
-
-| Component | Minimum Spec | Recommended Spec |
+| Component | Minimum | Recommended |
 | :--- | :--- | :--- |
-| **Processor** | Intel Pentium II (233MHz) | Intel Pentium II (400MHz+) |
-| **RAM** | 64 MB SDRAM | 128 MB SDRAM |
+| **CPU** | Pentium II 233MHz | Pentium II 400MHz+ |
+| **RAM** | 64 MB | 128 MB |
 | **OS** | FreeDOS 1.2+ | FreeDOS 1.3 |
-| **Storage** | 100 MB free space | 500 MB+ free space |
 
 ---
 
-## 🔧 Development Environment
+## 🔧 Quick Start
 
-While the target is vintage hardware, development happens on modern systems using a Docker-based cross-compilation toolchain.
+**Prerequisites:** Docker Desktop
 
-### Prerequisites
-
-- **Docker Desktop** (for Mac, Windows, or Linux)
-- A text editor of your choice
-- Git (optional, for version control)
-
-### Project Structure
-```
-retrolm/
-├── Dockerfile              # Docker build configuration
-├── Makefile               # Build automation
-├── build-linux.sh         # Linux build script (for testing)
-├── build-dos.sh           # DOS build script (for deployment)
-├── docker-shell.sh        # Interactive container access
-├── src/                   # Source files (C and Assembly)
-└── build/                 # Generated executables (gitignored)
-```
-
-### Setup Instructions
-
-1. **Clone the repository:**
 ```bash
-   git clone https://github.com/agaz1985/retrolm.git
-   cd retrolm
-```
+# Clone and setup
+git clone https://github.com/agaz1985/retrolm.git
+cd retrolm
+chmod +x *.sh
+make build
 
-2. **Make scripts executable:**
-```bash
-   chmod +x build-linux.sh build-dos.sh docker-shell.sh
-```
-
-3. **Build the Docker image:**
-```bash
-   make build
-```
-
-### Development Workflow
-
-**Fast iteration (development on Linux 32-bit):**
-```bash
-make run          # Build and run instantly for testing
-```
-
-**Build for FreeDOS deployment:**
-```bash
-make dos          # Creates build/retrolm.exe
-```
-
-**Interactive debugging:**
-```bash
-make shell        # Opens bash shell inside container
-```
-
-**Clean build artifacts:**
-```bash
-make clean        # Remove build directory
-```
-
-### Available Make Commands
-```bash
-make dev          # Build for Linux (32-bit testing)
-make dos          # Build for FreeDOS (deployment)
-make run          # Build and run Linux version
-make shell        # Open interactive Docker shell
+# Development
+make run          # Fast: Build & run on Linux (32-bit)
+make dos          # Deploy: Build retrolm.exe for FreeDOS
+make shell        # Debug: Interactive container shell
 make clean        # Remove build artifacts
-make clean-docker # Remove Docker image
-make help         # Show all commands
 ```
 
-### Build Toolchain Details
+**Deploy to Pentium II:**
+1. `make dos` → creates `build/retrolm.exe`
+2. Transfer via USB/floppy/serial to FreeDOS machine
+3. Run: `C:\> retrolm.exe`
 
-- **Assembler:** NASM (Netwide Assembler)
-- **Linux Compiler:** GCC with `-m32` flag for 32-bit x86
-- **DOS Cross-Compiler:** DJGPP (i586-pc-msdosdjgpp-gcc)
-- **Docker Base:** Ubuntu 22.04 (linux/amd64)
-
-### Development Platform
-
-Development is performed on an **Apple M4 MacBook Air** using Docker for x86_64 emulation via Rosetta 2. The same Docker-based workflow works on any platform (Mac/Windows/Linux).
-
-### Deployment to Target Hardware
-
-1. Build the DOS executable:
-```bash
-   make dos
-```
-
-2. Transfer `build/retrolm.exe` to your Pentium II:
-   - Copy to USB drive (if motherboard supports USB)
-   - Copy to 3.5" floppy disk
-   - Transfer via serial/parallel cable
-   - Use network boot (if available)
-
-3. Boot FreeDOS on the Pentium II and run:
-```bash
-   C:\> retrolm.exe
-```
+**Toolchain:** NASM (asm) • GCC `-m32` (Linux) • DJGPP (DOS) • Docker/Ubuntu 22.04
 
 ---
 
-## 🤔 Why Build This?
+## 🤔 Why?
 
-I wanted to find out what happens when you take one of the most resource-intensive computing concepts of today and force it onto the constraints of 1998 hardware. It's an exploration of low-level optimization, memory management, and vintage computer architecture—a challenging exercise in doing things the hard way.
+An exploration of what happens when modern AI meets 1998 hardware constraints—deep diving into low-level optimization, memory management, and vintage architecture.
 
 ---
 
 ## 📚 References
 
-- **The C Programming Language** (2nd Edition) - Brian W. Kernighan & Dennis M. Ritchie
-- **The Art of Assembly Language** - Randall Hyde
+- *The C Programming Language* (2nd Ed.) - Kernighan & Ritchie
+- *The Art of Assembly Language* - Randall Hyde
 
-## 🙏 Acknowledgments
-
-Built with determination, coffee, and a deep appreciation for the engineers who designed these incredible machines decades ago.
+Built with determination, coffee, and deep appreciation for vintage computing. ☕

@@ -1,3 +1,15 @@
+/**
+ * @file matrix.c
+ * @brief Implementation of high-level matrix operations
+ * 
+ * This module implements the Matrix2D API by wrapping low-level operations
+ * from matrix_ops.h. It provides:
+ * - Input validation and error checking
+ * - Memory management
+ * - Broadcasting logic for element-wise operations
+ * - High-level mathematical operations
+ */
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -9,7 +21,7 @@
 #include "exceptions.h"
 #include "matrix_ops.h"
 
-struct Matrix2D mat_new(unsigned int r, unsigned int c) {
+/* ========================================\n * Construction and Destruction\n * ======================================== */\n\n/**\n * @brief Create new zero-initialized float matrix\n */\nstruct Matrix2D mat_new(unsigned int r, unsigned int c) {
 	if (r == 0) {
 		throw("Matrix number of rows cannot be zero.\n", InvalidInput);
 	}

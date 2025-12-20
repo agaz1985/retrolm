@@ -1,8 +1,19 @@
+/**
+ * @file matrix_ops.c
+ * @brief Implementation of low-level optimized matrix operations
+ * 
+ * This module provides performance-critical operations on raw float arrays.
+ * Optimizations include:
+ * - Loop unrolling (4x in matmul)
+ * - Cache-friendly blocked transpose (8x8 blocks for 16KB L1 cache)
+ * - Direct pointer arithmetic for minimal overhead
+ */
+
 #include <math.h>
 
 #include "matrix_ops.h"
 
-#define BLOCK 8 // Small block for 16KB L1 cache of Pentium II
+#define BLOCK 8  /**< Block size for cache-friendly transpose (Pentium II: 16KB L1) */
 
 #define max(a,b) \
  ({ __typeof__ (a) _a = (a); \
@@ -14,6 +25,13 @@
      __typeof__ (b) _b = (b); \
    _a < _b ? _a : _b; })
 
+/**
+ * @brief Optimized matrix multiplication with 4x loop unrolling
+ * 
+ * Computes C = A * B where A is [r1 x c1] and B is [c1 x c2].
+ * Uses loop unrolling to improve performance by reducing loop overhead
+ * and enabling better instruction-level parallelism.
+ */
 void _matmul(const float *m1, const float *m2, float *res, unsigned int r1, unsigned int c1, unsigned int c2) {
   unsigned int i, j, k;
   for (i = 0; i < r1; ++i) {
@@ -45,6 +63,10 @@ void _matmul(const float *m1, const float *m2, float *res, unsigned int r1, unsi
   }
 }
 
+/* ========================================
+ * Element-wise addition operations
+ * ======================================== */
+
 void _matadd(const float *m1, const float *m2, float *res, unsigned int r1, unsigned int c1) {
   const unsigned int n = r1 * c1;
   for (unsigned int i = 0; i < n; ++i) {
@@ -65,6 +87,10 @@ void _matadd_colbroadcast(const float *m1, const float *m2, float *res, unsigned
     res[i] = m1[i] + m2[i / c1];
   }
 }
+
+/* ========================================
+ * Element-wise subtraction operations
+ * ======================================== */
 
 void _matsub(const float *m1, const float *m2, float *res, unsigned int r1, unsigned int c1) {
   const unsigned int n = r1 * c1;
@@ -87,6 +113,10 @@ void _matsub_colbroadcast(const float *m1, const float *m2, float *res, unsigned
   }
 }
 
+/* ========================================
+ * Element-wise division operations
+ * ======================================== */
+
 void _matdiv(const float *m1, const float *m2, float *res, unsigned int r1, unsigned int c1) {
   const unsigned int n = r1 * c1;
   for (unsigned int i = 0; i < n; ++i) {
@@ -108,12 +138,23 @@ void _matdiv_colbroadcast(const float *m1, const float *m2, float *res, unsigned
   }
 }
 
+/* ========================================
+ * Mathematical functions
+ * ======================================== */
+
+/**
+ * @brief Element-wise exponential using expf() for single precision
+ */
 void _matexp(const float *m, float *res, unsigned int r, unsigned int c) {
   const unsigned int n = r * c;
   for (unsigned int i = 0; i < n; ++i) {
     res[i] = expf(m[i]);
   }
 }
+
+/* ========================================
+ * Reduction operations (sum/max along dimensions)
+ * ======================================== */
 
 void _matsum_rowwise(float *m, float *res, unsigned int r, unsigned int c) {
   for (unsigned int i = 0; i < r; ++i) {
@@ -155,6 +196,16 @@ void _matmax_colwise(float *m, float *res, unsigned int r, unsigned int c) {
   }
 }
 
+/* ========================================
+ * Matrix transpose with cache-friendly blocking
+ * ======================================== */
+
+/**
+ * @brief Cache-optimized transpose using 8x8 blocks
+ * 
+ * Processes matrix in small blocks to maximize L1 cache hits.
+ * Block size of 8 chosen for Pentium II architecture.
+ */
 void _mattranspose(const float *m, unsigned int r, unsigned int c, float *res) {
   unsigned int i, j, ii, jj;
   unsigned int i_max, j_max;
@@ -170,6 +221,10 @@ void _mattranspose(const float *m, unsigned int r, unsigned int c, float *res) {
   }
 }
 
+/* ========================================
+ * In-place scalar operations
+ * ======================================== */
+
 void _matscale(float *m, unsigned int r, unsigned int c, float alpha) {
   const unsigned int n = r * c;
   for (unsigned int i = 0; i < n; ++i) {
@@ -183,6 +238,10 @@ void _matshift(float *m, unsigned int r, unsigned int c, float beta) {
     m[i] += beta;
   }
 }
+
+/* ========================================
+ * Clamping operations
+ * ======================================== */
 
 void _matclamp(float *m, unsigned int r, unsigned int c, float lo, float hi) {
   const unsigned int n = r * c;

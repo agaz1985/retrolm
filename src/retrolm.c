@@ -1,3 +1,15 @@
+/**
+ * @file retrolm.c
+ * @brief Main entry point for RetroLM interactive chat application
+ * 
+ * This program implements an interactive chatbot using a transformer language model.
+ * It supports:
+ * - Loading pre-trained model weights
+ * - Interactive text generation with temperature sampling
+ * - Sliding window context management
+ * - Real-time streaming output
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,12 +21,28 @@
 #include "utils.h"
 #include "loader.h"
 
-#define MAX_INPUT 256
-#define SEQ_LEN 64
-#define VOCAB_SIZE 512
-#define MAX_RESPONSE 512
+#define MAX_INPUT 256      /**< Maximum input length from user */
+#define SEQ_LEN 64         /**< Context window size (characters) */
+#define VOCAB_SIZE 512     /**< Vocabulary size (ASCII-based) */
+#define MAX_RESPONSE 512   /**< Maximum tokens to generate per response */
 
-// Modified to return generated text
+/**
+ * @brief Generate text interactively using the transformer model
+ * 
+ * Performs autoregressive text generation with:
+ * - Sliding window context (last SEQ_LEN tokens)
+ * - Temperature-based sampling (temp=0.8)
+ * - Softmax over vocabulary for probability distribution
+ * - Early stopping on newline
+ * 
+ * @param model Pointer to loaded transformer model
+ * @param history Context string (can be NULL)
+ * @param max_tokens Maximum number of tokens to generate
+ * @return Dynamically allocated string with generated text (caller must free)
+ * 
+ * @note Prints generated tokens to stdout in real-time
+ * @note Only printable ASCII characters (32-126) are included in output
+ */
 char* generate_interactive(struct TransformerParameters *model, 
                           const char *history,
                           unsigned int max_tokens) {    
@@ -119,7 +147,18 @@ char* generate_interactive(struct TransformerParameters *model,
     return response;
 }
 
-// Helper to manage sliding window history
+/**
+ * @brief Update conversation history with sliding window
+ * 
+ * Appends new text to history and truncates to SEQ_LEN characters.
+ * Maintains a fixed-size context window for the model.
+ * 
+ * @param history Buffer to update (must be at least SEQ_LEN*2+1 bytes)
+ * @param new_text Text to append to history
+ * 
+ * @note Keeps only the most recent SEQ_LEN characters
+ * @note Automatically manages memory and truncation
+ */
 void update_history(char *history, const char *new_text) {
     size_t history_len = strlen(history);
     size_t new_len = strlen(new_text);
@@ -147,6 +186,25 @@ void update_history(char *history, const char *new_text) {
     free(temp);
 }
 
+/**
+ * @brief Main entry point for RetroLM interactive chat
+ * 
+ * Program flow:
+ * 1. Initialize random seed for sampling
+ * 2. Print banner
+ * 3. Load pre-trained model weights
+ * 4. Enter interactive loop:
+ *    - Read user input
+ *    - Update context history
+ *    - Generate response
+ *    - Display and update history with response
+ * 5. Clean up and exit
+ * 
+ * @return 0 on success, error code on failure
+ * 
+ * @note Expects model weights in ./torch_code/weights/ directory
+ * @note Type 'quit' or 'exit' to end the conversation
+ */
 int main() {
     setbuf(stderr, NULL);
     setbuf(stdout, NULL);

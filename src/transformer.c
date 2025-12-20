@@ -1,9 +1,17 @@
+/**
+ * @file transformer.c
+ * @brief Implementation of transformer language model
+ */
+
 #include "transformer.h"
 #include "activations.h"
 #include "layers.h"
 #include "exceptions.h"
 #include <stdio.h>
 
+/**
+ * @brief Create new transformer with allocated but uninitialized parameters
+ */
 struct TransformerParameters transformer_new(unsigned int seq_len, unsigned int embeded_dim, unsigned int ff_dim, unsigned int vocab_size) {
 	struct TransformerParameters params;
 	params.token_embed = embeddings_new(vocab_size, embeded_dim);
