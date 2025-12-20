@@ -2,7 +2,7 @@ import struct
 import os
 from pathlib import Path
 
-def export_weights(model, output_dir='weights'):
+def export_weights(model, model_config, output_dir='weights'):
     """Export model weights in binary format for C"""
     Path(output_dir).mkdir(exist_ok=True)
     model.eval()
@@ -50,13 +50,12 @@ def export_weights(model, output_dir='weights'):
     print(f"{'='*70}\n")
     
     # Save config
-    from model import SEQ_LEN, VOCAB_SIZE, EMBED_DIM, FF_DIM
     config_path = os.path.join(output_dir, "config.txt")
     with open(config_path, 'w') as f:
-        f.write(f"SEQ_LEN={SEQ_LEN}\n")
-        f.write(f"VOCAB_SIZE={VOCAB_SIZE}\n")
-        f.write(f"EMBED_DIM={EMBED_DIM}\n")
-        f.write(f"FF_DIM={FF_DIM}\n")
+        f.write(f"SEQ_LEN={model_config.seq_len}\n")
+        f.write(f"VOCAB_SIZE={model_config.vocab_size}\n")
+        f.write(f"EMBED_DIM={model_config.embed_dim}\n")
+        f.write(f"FF_DIM={model_config.ff_dim}\n")
     
     print(f"✓ Config saved to {config_path}")
     print(f"✓ All weights saved to {output_dir}/")

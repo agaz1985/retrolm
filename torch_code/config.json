@@ -1,0 +1,21 @@
+{
+  "model": {
+    "seq_len": 64,
+    "vocab_size": 512,
+    "embed_dim": 128,
+    "ff_dim": 256,
+    "num_layers": 1,
+    "dropout": 0.1
+  },
+  "training": {
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "weight_decay": 0.01,
+    "epochs": 300,
+    "warmup_steps": 500,
+    "grad_clip": 1.0,
+    "eval_interval": 100,
+    "patience": 50,
+    "use_sequential_loader": false
+  }
+}
