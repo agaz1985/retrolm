@@ -21,7 +21,14 @@
 #include "exceptions.h"
 #include "matrix_ops.h"
 
-/* ========================================\n * Construction and Destruction\n * ======================================== */\n\n/**\n * @brief Create new zero-initialized float matrix\n */\nstruct Matrix2D mat_new(unsigned int r, unsigned int c) {
+/* ========================================
+ * Construction and Destruction
+ * ======================================== */
+
+/**
+ * @brief Create new zero-initialized float matrix
+ */
+struct Matrix2D mat_new(unsigned int r, unsigned int c) {
 	if (r == 0) {
 		throw("Matrix number of rows cannot be zero.\n", InvalidInput);
 	}

@@ -13,178 +13,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <time.h>
 
 #include "transformer.h"
-#include "matrix.h"
 #include "utils.h"
 #include "loader.h"
+#include "chat.h"
 
 #define MAX_INPUT 256      /**< Maximum input length from user */
-#define SEQ_LEN 64         /**< Context window size (characters) */
 #define VOCAB_SIZE 512     /**< Vocabulary size (ASCII-based) */
-#define MAX_RESPONSE 512   /**< Maximum tokens to generate per response */
-
-/**
- * @brief Generate text interactively using the transformer model
- * 
- * Performs autoregressive text generation with:
- * - Sliding window context (last SEQ_LEN tokens)
- * - Temperature-based sampling (temp=0.8)
- * - Softmax over vocabulary for probability distribution
- * - Early stopping on newline
- * 
- * @param model Pointer to loaded transformer model
- * @param history Context string (can be NULL)
- * @param max_tokens Maximum number of tokens to generate
- * @return Dynamically allocated string with generated text (caller must free)
- * 
- * @note Prints generated tokens to stdout in real-time
- * @note Only printable ASCII characters (32-126) are included in output
- */
-char* generate_interactive(struct TransformerParameters *model, 
-                          const char *history,
-                          unsigned int max_tokens) {    
-    unsigned int history_len = history ? strlen(history) : 0;
-    
-    unsigned int buffer_size = history_len + max_tokens + 1;
-    unsigned int *all_tokens = malloc(buffer_size * sizeof(unsigned int));
-    
-    // Copy history tokens
-    unsigned int pos = 0;
-    if (history) {
-        for (unsigned int i = 0; i < history_len; i++) {
-            all_tokens[pos++] = (unsigned int)(unsigned char)history[i];
-        }
-    }
-    
-    // Allocate buffer for generated response
-    char *response = malloc(max_tokens + 1);
-    unsigned int response_pos = 0;
-    
-    for (unsigned int t = 0; t < max_tokens; t++) {
-        unsigned int current_len = pos;
-        unsigned int input_len = (current_len > SEQ_LEN) ? SEQ_LEN : current_len;
-        unsigned int start_pos = current_len - input_len;
-        
-        struct Matrix2D_UInt input = mat_uint_new(1, input_len);
-        for (unsigned int i = 0; i < input_len; i++) {
-            input.data[i] = all_tokens[start_pos + i];
-        }
-        
-        struct Matrix2D logits = transformer_forward(&input, model);
-        float *last_logits = logits.data + (input_len - 1) * VOCAB_SIZE;
-        
-        // Softmax
-        float max_logit = last_logits[0];
-        for (unsigned int i = 1; i < VOCAB_SIZE; i++) {
-            if (last_logits[i] > max_logit) max_logit = last_logits[i];
-        }
-        
-        float sum = 0.0f;
-        for (unsigned int i = 0; i < VOCAB_SIZE; i++) {
-            last_logits[i] = expf(last_logits[i] - max_logit);
-            sum += last_logits[i];
-        }
-        
-        for (unsigned int i = 0; i < VOCAB_SIZE; i++) {
-            last_logits[i] /= sum;
-        }
-        
-        // Temperature sampling with temperature = 0.8
-        float temperature = 0.8f;
-        for (unsigned int i = 0; i < VOCAB_SIZE; i++) {
-            last_logits[i] = powf(last_logits[i], 1.0f / temperature);
-        }
-        
-        // Re-normalize after temperature
-        sum = 0.0f;
-        for (unsigned int i = 0; i < VOCAB_SIZE; i++) {
-            sum += last_logits[i];
-        }
-        for (unsigned int i = 0; i < VOCAB_SIZE; i++) {
-            last_logits[i] /= sum;
-        }
-        
-        // Sample from distribution
-        float rand_val = (float)rand() / (float)RAND_MAX;
-        float cumsum = 0.0f;
-        unsigned int next_token = 0;
-        
-        for (unsigned int i = 0; i < VOCAB_SIZE; i++) {
-            cumsum += last_logits[i];
-            if (rand_val < cumsum) {
-                next_token = i;
-                break;
-            }
-        }
-        
-        all_tokens[pos++] = next_token;
-        
-        // Stop on newline
-        if (next_token == '\n') {
-            response[response_pos] = '\0';
-            mat_uint_free(&input);
-            mat_free(&logits);
-            break;
-        }
-        
-        // Save printable characters to response
-        if (next_token >= 32 && next_token < 127) {
-            printf("%c", (char)next_token);
-            response[response_pos++] = (char)next_token;
-        }
-        fflush(stdout);
-        
-        mat_uint_free(&input);
-        mat_free(&logits);
-    }
-    
-    response[response_pos] = '\0';
-    free(all_tokens);
-    
-    return response;
-}
-
-/**
- * @brief Update conversation history with sliding window
- * 
- * Appends new text to history and truncates to SEQ_LEN characters.
- * Maintains a fixed-size context window for the model.
- * 
- * @param history Buffer to update (must be at least SEQ_LEN*2+1 bytes)
- * @param new_text Text to append to history
- * 
- * @note Keeps only the most recent SEQ_LEN characters
- * @note Automatically manages memory and truncation
- */
-void update_history(char *history, const char *new_text) {
-    size_t history_len = strlen(history);
-    size_t new_len = strlen(new_text);
-    size_t total_len = history_len + new_len + 1; // +1 for space
-    
-    char *temp = malloc(total_len + 1);
-    temp[0] = '\0';
-    
-    if (history_len > 0) {
-        strcpy(temp, history);
-        strcat(temp, " ");
-    }
-    strcat(temp, new_text);
-    
-    size_t temp_len = strlen(temp);
-    
-    // Keep only the last SEQ_LEN characters
-    if (temp_len > SEQ_LEN) {
-        size_t offset = temp_len - SEQ_LEN;
-        strcpy(history, temp + offset);
-    } else {
-        strcpy(history, temp);
-    }
-    
-    free(temp);
-}
 
 /**
  * @brief Main entry point for RetroLM interactive chat
@@ -200,74 +37,100 @@ void update_history(char *history, const char *new_text) {
  *    - Display and update history with response
  * 5. Clean up and exit
  * 
- * @return 0 on success, error code on failure
+ * @return 0 on success, 1 on failure
  * 
  * @note Expects model weights in ./torch_code/weights/ directory
  * @note Type 'quit' or 'exit' to end the conversation
  */
-int main() {
+int main(void) {
     setbuf(stderr, NULL);
     setbuf(stdout, NULL);
     
     // Seed random number generator for sampling
-    srand(time(NULL));
+    srand((unsigned int)time(NULL));
     
+    // Print welcome banner
     print_retrolm();
+    
+    // Load model weights
     struct TransformerParameters model = load_model_weights("./torch_code/weights");
     
+    // Note: load_model_weights will call exit() on failure, so no need to check here
+    // In a future improvement, it should return an error code instead
+    
     printf("\n============================================================\n");
-    printf("RetroLM Interactive Chat (Context: %d chars)\n", SEQ_LEN);
+    printf("RetroLM Interactive Chat (Context: %d chars)\n", CONTEXT_WINDOW_SIZE);
     printf("============================================================\n");
     printf("Type 'quit' or 'exit' to end the conversation\n");
     printf("============================================================\n\n");
     
-    char history[SEQ_LEN * 2 + 1]; // Extra buffer for safety
+    // Initialize conversation history buffer
+    // Size: CONTEXT_WINDOW_SIZE for content + extra space for intermediate operations + null terminator
+    // update_history() requires at least CONTEXT_WINDOW_SIZE + 1 bytes
+    char history[CONTEXT_WINDOW_SIZE * 2 + 1];
     history[0] = '\0';
     
     char input[MAX_INPUT];
+    int exit_code = 0;
 
     while (1) {
         printf("You: ");
         fflush(stdout);
         
+        // Read user input
         if (!fgets(input, MAX_INPUT, stdin)) {
             break;
         }
         
+        // Remove trailing newline
         size_t len = strlen(input);
         if (len > 0 && input[len-1] == '\n') {
             input[len-1] = '\0';
             len--;
         }
         
+        // Check for exit commands
         if (strcmp(input, "quit") == 0 || strcmp(input, "exit") == 0) {
             printf("\nGoodbye!\n");
             break;
         }
         
+        // Skip empty input
         if (len == 0) {
             continue;
         }
 
         // Add user input to history
-        update_history(history, input);
+        if (update_history(history, input) != 0) {
+            fprintf(stderr, "Warning: Failed to update history with user input\n");
+        }
         
         printf("Bot: ");
         fflush(stdout);
         
-        // Generate response and get the text back
-        char *response = generate_interactive(&model, history, 100);
+        // Generate response (100 tokens max)
+        char *response = generate_interactive(&model, history, 100, VOCAB_SIZE);
+        
+        if (!response) {
+            fprintf(stderr, "\nError: Failed to generate response\n");
+            exit_code = 1;
+            break;
+        }
         
         printf("\n");
         
         // Add bot response to history
         if (strlen(response) > 0) {
-            update_history(history, response);
+            if (update_history(history, response) != 0) {
+                fprintf(stderr, "Warning: Failed to update history with bot response\n");
+            }
         }
         
         free(response);
     }
     
+    // Clean up model resources
     transformer_free(&model);
-    return 0;
+    
+    return exit_code;
 }
