@@ -1,27 +1,95 @@
 import torch
+import os
 
-def load_text_data(file_path):
-    """Load and preprocess text data"""
-    with open(file_path, 'r', encoding='utf-8') as f:
-        text = f.read()
+def load_text_data(file_path=None, train_path=None, val_path=None, train_limit_mb=None):
+    """Load and preprocess text data using byte-level encoding
     
-    # Filter to 7-bit ASCII (printable + newline)
-    text = ''.join([c for c in text if 32 <= ord(c) < 127 or c == '\n'])
+    Args:
+        file_path: Single file to load and split 90/10 (legacy mode)
+        train_path: Separate training file (recommended)
+        val_path: Separate validation file (recommended)
+        train_limit_mb: Limit training data to first N megabytes (None = use all)
     
-    # Convert to token IDs
-    data = torch.tensor([ord(c) for c in text], dtype=torch.long)
+    Returns:
+        tuple: (train_data, val_data) as torch tensors
+    """
+    # Mode 1: Separate train/val files (recommended for large datasets like TinyStories)
+    if train_path and val_path:
+        print(f"Loading separate train/val files...")
+        
+        with open(train_path, 'rb') as f:
+            if train_limit_mb is not None:
+                # Read only first N MB for faster training
+                limit_bytes = train_limit_mb * 1024 * 1024
+                train_bytes = f.read(limit_bytes)
+                print(f"⚠️  Limited training data to {train_limit_mb} MB ({len(train_bytes):,} bytes)")
+            else:
+                train_bytes = f.read()
+        train_data = torch.tensor(list(train_bytes), dtype=torch.long)
+        
+        with open(val_path, 'rb') as f:
+            val_bytes = f.read()
+        val_data = torch.tensor(list(val_bytes), dtype=torch.long)
+        
+        # Display info
+        try:
+            train_text = train_bytes[:100].decode('utf-8', errors='replace')
+            val_text = val_bytes[:100].decode('utf-8', errors='replace')
+        except:
+            train_text = str(train_bytes[:100])
+            val_text = str(val_bytes[:100])
+        
+        print(f"\nTrain set: {len(train_data):,} bytes")
+        print(f"Val set: {len(val_data):,} bytes")
+        print(f"Unique train chars: {len(set(train_bytes))}")
+        print(f"Unique val chars: {len(set(val_bytes))}")
+        print(f"\nTrain sample: {train_text}")
+        print(f"Val sample: {val_text}")
+        
+        return train_data, val_data
     
-    print(f"Loaded {len(data):,} characters")
-    print(f"Unique characters: {len(set(text))}")
-    print(f"Sample: {text[:100]}")
+    # Mode 2: Single file with 90/10 split (legacy)
+    elif file_path:
+        print(f"Loading single file with 90/10 split...")
+        
+        with open(file_path, 'rb') as f:
+            raw_bytes = f.read()
+        
+        data = torch.tensor(list(raw_bytes), dtype=torch.long)
+        
+        # Split 90/10
+        n = int(0.9 * len(data))
+        train_data = data[:n]
+        val_data = data[n:]
+        
+        try:
+            text = raw_bytes[:100].decode('utf-8', errors='replace')
+        except:
+            text = str(raw_bytes[:100])
+        
+        print(f"\nTotal: {len(data):,} bytes")
+        print(f"Train: {len(train_data):,} bytes")
+        print(f"Val: {len(val_data):,} bytes")
+        print(f"Unique chars: {len(set(raw_bytes))}")
+        print(f"Sample: {text}")
+        
+        return train_data, val_data
     
-    return data
+    else:
+        raise ValueError("Must provide either file_path OR both train_path and val_path")
 
-def get_batch(data, batch_size, seq_len, split='train', device='cpu'):
-    """Generate a batch of training data with proper consecutive sequences"""
-    # Split data 90/10 train/val
-    n = int(0.9 * len(data))
-    split_data = data[:n] if split == 'train' else data[n:]
+def get_batch(train_data, val_data, batch_size, seq_len, split='train', device='cpu'):
+    """Generate a batch of training data with proper consecutive sequences
+    
+    Args:
+        train_data: Training data tensor
+        val_data: Validation data tensor
+        batch_size: Number of sequences per batch
+        seq_len: Length of each sequence
+        split: 'train' or 'val'
+        device: Device to place tensors on
+    """
+    split_data = train_data if split == 'train' else val_data
     
     # Safety check
     if len(split_data) <= seq_len + 1:
@@ -47,13 +115,20 @@ def get_batch(data, batch_size, seq_len, split='train', device='cpu'):
     return x.to(device), y.to(device)
 
 
-def create_dataloader(data, batch_size, seq_len, split='train', device='cpu'):
+def create_dataloader(train_data, val_data, batch_size, seq_len, split='train', device='cpu'):
     """
-    Alternative: Create a proper dataloader that iterates through data sequentially.
+    Create a proper dataloader that iterates through data sequentially.
     This is better for small datasets as it ensures all data is seen each epoch.
+    
+    Args:
+        train_data: Training data tensor
+        val_data: Validation data tensor
+        batch_size: Number of sequences per batch
+        seq_len: Length of each sequence
+        split: 'train' or 'val'
+        device: Device to place tensors on
     """
-    n = int(0.9 * len(data))
-    split_data = data[:n] if split == 'train' else data[n:]
+    split_data = train_data if split == 'train' else val_data
     
     # Calculate number of full sequences we can make
     num_sequences = (len(split_data) - 1) // seq_len
@@ -69,19 +144,28 @@ def create_dataloader(data, batch_size, seq_len, split='train', device='cpu'):
     x = split_data[:-1].view(num_sequences, seq_len)
     y = split_data[1:truncated_length + 1].view(num_sequences, seq_len)
     
-    # Create batches
-    num_batches = num_sequences // batch_size
-    if num_batches == 0:
+    # Create batches (including remainder)
+    num_full_batches = num_sequences // batch_size
+    remainder = num_sequences % batch_size
+    
+    if num_full_batches == 0:
         # If we can't make a full batch, just use what we have
         return [(x.to(device), y.to(device))]
     
     batches = []
-    for i in range(num_batches):
+    for i in range(num_full_batches):
         start_idx = i * batch_size
         end_idx = start_idx + batch_size
         batches.append((
             x[start_idx:end_idx].to(device),
             y[start_idx:end_idx].to(device)
+        ))
+    
+    # Add remainder batch if it exists (important for small datasets)
+    if remainder > 0:
+        batches.append((
+            x[num_full_batches * batch_size:].to(device),
+            y[num_full_batches * batch_size:].to(device)
         ))
     
     return batches

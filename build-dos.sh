@@ -16,5 +16,8 @@ CFLAGS="-Wall -Wextra -O2"
 
 i586-pc-msdosdjgpp-gcc $CFLAGS $SOURCES -o retrolm.exe -lm
 
+echo "Copying weight files..."
+cp ../torch_code/weights/*.bin . 2>/dev/null || echo "No .bin files found in torch_code/weights"
+
 cd ..
 echo "✅ Build successful! Executable: build/retrolm.exe"

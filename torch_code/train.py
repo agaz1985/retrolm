@@ -1,8 +1,16 @@
 import torch
 import torch.nn.functional as F
 
-def train_model(model, data, config, device='cpu'):
-    """Train the model with proper regularization and early stopping"""
+def train_model(model, train_data, val_data, config, device='cpu'):
+    """Train the model with proper regularization and early stopping
+    
+    Args:
+        model: The model to train
+        train_data: Training data tensor
+        val_data: Validation data tensor
+        config: Training configuration dict
+        device: Device to train on
+    """
     model = model.to(device)
     
     # Use optimizer and scheduler from config (created in main.py)
@@ -25,7 +33,7 @@ def train_model(model, data, config, device='cpu'):
     
     if use_sequential:
         print("Using sequential dataloader (recommended for small datasets)")
-        train_batches = create_dataloader(data, config['batch_size'], config['seq_len'], 'train', device)
+        train_batches = create_dataloader(train_data, val_data, config['batch_size'], config['seq_len'], 'train', device)
         config['steps_per_epoch'] = len(train_batches)
         print(f"Created {len(train_batches)} batches per epoch")
     
@@ -33,6 +41,8 @@ def train_model(model, data, config, device='cpu'):
     print("TRAINING STARTED")
     print(f"{'='*70}")
     print(f"Device: {device}")
+    if device == 'mps':
+        print("Note: First batch on MPS may take 30-60 seconds to compile")
     print(f"Parameters: {model.count_parameters():,}")
     print(f"Batch size: {config['batch_size']}")
     print(f"Learning rate: {config['learning_rate']}")
@@ -51,16 +61,30 @@ def train_model(model, data, config, device='cpu'):
     
     global_step = 0
     
+    # Test initial batch to warm up device
+    print("\nWarming up device with test batch...")
+    X_test, Y_test = get_batch(train_data, val_data, config['batch_size'], config['seq_len'], 'train', device)
+    _ = model(X_test)
+    print("✓ Device ready\n")
+    import sys
+    sys.stdout.flush()
+    
     for epoch in range(config['epochs']):
         model.train()
         epoch_loss = 0
+        print(f"\nEpoch {epoch+1}/{config['epochs']}")
+        print("-" * 70)
+        sys.stdout.flush()
+        
+        # Progress tracking
+        log_interval = 100  # Log every 100 steps for consistent feedback
         
         for step in range(config['steps_per_epoch']):
             # Get batch
             if use_sequential and step < len(train_batches):
                 X, Y = train_batches[step]
             else:
-                X, Y = get_batch(data, config['batch_size'], config['seq_len'], 
+                X, Y = get_batch(train_data, val_data, config['batch_size'], config['seq_len'], 
                                'train', device)
             
             # Forward pass
@@ -86,12 +110,23 @@ def train_model(model, data, config, device='cpu'):
             
             epoch_loss += loss.item()
             global_step += 1
+            
+            # Progress indicator - show every 100 steps or first 10 steps
+            if (step + 1) % log_interval == 0 or step < 10:
+                progress = (step + 1) / config['steps_per_epoch'] * 100
+                current_lr = optimizer.param_groups[0]['lr']
+                avg_loss = epoch_loss / (step + 1)
+                print(f"  Step {step+1:6d}/{config['steps_per_epoch']} ({progress:5.1f}%) | "
+                      f"Loss: {loss.item():.4f} | Avg: {avg_loss:.4f} | LR: {current_lr:.2e}", 
+                      end='\r')
+                sys.stdout.flush()
         
         # Epoch statistics
+        print()  # Clear progress line
         avg_train_loss = epoch_loss / config['steps_per_epoch']
         
         # Validation evaluation
-        val_loss = evaluate_model(model, data, config, device)
+        val_loss = evaluate_model(model, train_data, val_data, config, device)
         
         # Get current learning rate
         current_lr = optimizer.param_groups[0]['lr']
@@ -134,19 +169,32 @@ def train_model(model, data, config, device='cpu'):
     return model
 
 @torch.no_grad()
-def evaluate_model(model, data, config, device='cpu', eval_iters=50):
-    """Evaluate model on validation set"""
+def evaluate_model(model, train_data, val_data, config, device='cpu', eval_iters=None):
+    """Evaluate model on validation set
+    
+    Args:
+        model: The model to evaluate
+        train_data: Training data tensor (not used, but kept for consistency)
+        val_data: Validation data tensor
+        config: Training configuration dict
+        device: Device to evaluate on
+        eval_iters: Number of iterations to evaluate (uses config value if None)
+    """
     from data import get_batch
     
     model.eval()
     losses = []
+    
+    # Use config value if not specified
+    if eval_iters is None:
+        eval_iters = config.get('eval_iters', 50)
     
     # Reduce eval_iters if we don't have enough data
     actual_eval_iters = min(eval_iters, config.get('steps_per_epoch', 50))
     
     for _ in range(actual_eval_iters):
         try:
-            X, Y = get_batch(data, config['batch_size'], config['seq_len'], 
+            X, Y = get_batch(train_data, val_data, config['batch_size'], config['seq_len'], 
                             'val', device)
             logits = model(X)
             loss = F.cross_entropy(logits.view(-1, logits.size(-1)), Y.view(-1))

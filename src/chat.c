@@ -98,12 +98,14 @@ char* generate_interactive(struct TransformerParameters *model,
             break;
         }
         
-        // Save printable characters to response
-        if (next_token >= 32 && next_token < 127) {
-            printf("%c", (char)next_token);
-            fflush(stdout);
-            response[response_pos++] = (char)next_token;
+        // Save all bytes to response (byte-level encoding)
+        // Stop on null byte or control characters that break display
+        if (next_token == 0) {
+            break;  // Stop on null byte
         }
+        printf("%c", (char)next_token);
+        fflush(stdout);
+        response[response_pos++] = (char)next_token;
     }
     
     response[response_pos] = '\0';

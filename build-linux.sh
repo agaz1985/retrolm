@@ -15,5 +15,8 @@ CFLAGS="-m32 -Wall -Wextra -O2"
 
 gcc $CFLAGS $SOURCES -lm -o retrolm
 
+echo "Copying weights files..."
+cp ../torch_code/weights/*.bin . 2>/dev/null || echo "⚠️  No .bin files found in torch_code/weights"
+
 cd ..
 echo "✅ Build successful! Binary: build/retrolm"

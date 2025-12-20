@@ -113,11 +113,15 @@ def create_optimizer(model, config):
     for name, param in model.named_parameters():
         if param.requires_grad:
             # Don't apply weight decay to:
-            # - biases
+            # - biases (except lm_head.bias which is independent)
             # - positional embeddings
-            # - lm_head (it's tied to token_embed, so we'd double-count)
-            if 'bias' in name or 'pos_embed' in name or 'lm_head' in name:
+            # Note: lm_head.weight is tied to token_embed.weight (already counted)
+            # but lm_head.bias is independent and should NOT have decay
+            if 'bias' in name or 'pos_embed' in name:
                 no_decay_params.append(param)
+            elif 'lm_head.weight' in name:
+                # Skip lm_head.weight entirely - it's the same tensor as token_embed.weight
+                continue
             else:
                 decay_params.append(param)
     

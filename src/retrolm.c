@@ -21,7 +21,8 @@
 #include "chat.h"
 
 #define MAX_INPUT 256      /**< Maximum input length from user */
-#define VOCAB_SIZE 512     /**< Vocabulary size (ASCII-based) */
+#define VOCAB_SIZE 256     /**< Vocabulary size (byte-level 0-255) */
+#define MAX_PATH 512       /**< Maximum path length */
 
 /**
  * @brief Main entry point for RetroLM interactive chat
@@ -39,7 +40,7 @@
  * 
  * @return 0 on success, 1 on failure
  * 
- * @note Expects model weights in ./torch_code/weights/ directory
+ * @note Expects model weight files in the same directory as the executable
  * @note Type 'quit' or 'exit' to end the conversation
  */
 int main(void) {
@@ -52,8 +53,15 @@ int main(void) {
     // Print welcome banner
     print_retrolm();
     
-    // Load model weights
-    struct TransformerParameters model = load_model_weights("./torch_code/weights");
+    // Get executable directory (weights are in the same folder)
+    char exe_dir[MAX_PATH];
+    if (get_executable_dir(exe_dir, MAX_PATH) != 0) {
+        fprintf(stderr, "Error: Failed to get executable directory\n");
+        return 1;
+    }
+    
+    // Load model weights from executable directory
+    struct TransformerParameters model = load_model_weights(exe_dir);
     
     // Note: load_model_weights will call exit() on failure, so no need to check here
     // In a future improvement, it should return an error code instead

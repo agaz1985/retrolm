@@ -1,21 +1,37 @@
 {
+  "data": {
+    "train_path": "./data/TinyStories-train.txt",
+    "val_path": "./data/TinyStories-valid.txt",
+    "train_limit_mb": 500
+  },
   "model": {
-    "seq_len": 64,
-    "vocab_size": 512,
-    "embed_dim": 128,
-    "ff_dim": 256,
+    "seq_len": 128,
+    "vocab_size": 256,
+    "embed_dim": 192,
+    "ff_dim": 384,
     "num_layers": 1,
     "dropout": 0.1
   },
   "training": {
-    "batch_size": 128,
+    "batch_size": 16,
     "learning_rate": 0.001,
     "weight_decay": 0.01,
-    "epochs": 300,
-    "warmup_steps": 500,
+    "epochs": 5,
+    "warmup_steps": 1000,
     "grad_clip": 1.0,
-    "eval_interval": 100,
-    "patience": 50,
+    "eval_interval": 2000,
+    "eval_iters": 50,
+    "patience": 3,
     "use_sequential_loader": false
+  },
+  "output": {
+    "weights_dir": "./weights",
+    "checkpoint_dir": "./checkpoints"
+  },
+  "inference": {
+    "test_prompts": ["Once upon a time", "The little girl", "One day", "There was a"],
+    "max_tokens": 100,
+    "temperature": 0.7,
+    "top_k": 50
   }
 }
