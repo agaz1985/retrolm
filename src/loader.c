@@ -8,6 +8,7 @@
 #include "exceptions.h"
 
 #include <stdio.h>
+#include <string.h>
 
 /**
  * @brief Load a single weight matrix from binary file
@@ -19,7 +20,7 @@ struct Matrix2D load_weight_matrix(const char *filepath) {
     FILE *f = fopen(filepath, "rb");
     if (!f) {
         char msg[256];
-        sprintf(msg, "Failed to open weight file: %s\n", filepath);
+        snprintf(msg, sizeof(msg), "Failed to open weight file: %s\n", filepath);
         throw(msg, FileError);
     }
     
@@ -46,6 +47,18 @@ struct Matrix2D load_weight_matrix(const char *filepath) {
 }
 
 /**
+ * @brief Helper to load a weight file with path construction and logging
+ */
+static struct Matrix2D load_weight(const char *dir, const char *filename) {
+    char filepath[512];
+    char logmsg[256];
+    snprintf(filepath, sizeof(filepath), "%s%s", dir, filename);
+    snprintf(logmsg, sizeof(logmsg), "Loading %s\n", filename);
+    logger(logmsg, DEBUG);
+    return load_weight_matrix(filepath);
+}
+
+/**
  * @brief Load all transformer model weights from directory
  * 
  * Sequentially loads all weight matrices for the transformer model.
@@ -54,75 +67,56 @@ struct Matrix2D load_weight_matrix(const char *filepath) {
  * The function logs each weight file as it's loaded for debugging.
  */
 struct TransformerParameters load_model_weights(const char *weights_dir) {
-    char filepath[256];
+    char weights_path[512];
     struct TransformerParameters p;
     
     logger("Loading model weights...\n", INFO);
+
+    // Validate and normalize weights_dir path
+    size_t dir_len = strlen(weights_dir);
+    if (dir_len == 0) {
+        throw("Empty weights directory path\n", ValueError);
+    }
+    if (dir_len > 490) {
+        throw("Weights directory path too long\n", ValueError);
+    }
     
-    // Token embeddings
-    sprintf(filepath, "%s/token_embed.bin", weights_dir);
-    logger("Loading token_embed.bin\n", DEBUG);
-    p.token_embed.weight_matrix = load_weight_matrix(filepath);
+    // Ensure path ends with separator
+    char last_char = weights_dir[dir_len - 1];
+#ifdef _WIN32
+    if (last_char != '\\' && last_char != '/') {
+        snprintf(weights_path, sizeof(weights_path), "%s\\", weights_dir);
+        weights_dir = weights_path;
+    }
+#else
+    if (last_char != '/') {
+        snprintf(weights_path, sizeof(weights_path), "%s/", weights_dir);
+        weights_dir = weights_path;
+    }
+#endif
+
+    // Load embeddings
+    p.token_embed.weight_matrix = load_weight(weights_dir, "token_embed.bin");
+    p.pos_embed = load_weight(weights_dir, "pos_embed.bin");
     
-    // Positional embeddings
-    sprintf(filepath, "%s/pos_embed.bin", weights_dir);
-    logger("Loading pos_embed.bin\n", DEBUG);
-    p.pos_embed = load_weight_matrix(filepath);
+    // Load attention weights
+    p.attn.Wq.weights = load_weight(weights_dir, "Wq_weight.bin");
+    p.attn.Wq.bias = load_weight(weights_dir, "Wq_bias.bin");
+    p.attn.Wk.weights = load_weight(weights_dir, "Wk_weight.bin");
+    p.attn.Wk.bias = load_weight(weights_dir, "Wk_bias.bin");
+    p.attn.Wv.weights = load_weight(weights_dir, "Wv_weight.bin");
+    p.attn.Wv.bias = load_weight(weights_dir, "Wv_bias.bin");
+    p.attn.Wo.weights = load_weight(weights_dir, "Wo_weight.bin");
+    p.attn.Wo.bias = load_weight(weights_dir, "Wo_bias.bin");
     
-    // Attention Q
-    sprintf(filepath, "%s/Wq_weight.bin", weights_dir);
-    logger("Loading Wq_weight.bin\n", DEBUG);
-    p.attn.Wq.weights = load_weight_matrix(filepath);
-    sprintf(filepath, "%s/Wq_bias.bin", weights_dir);
-    logger("Loading Wq_bias.bin\n", DEBUG);
-    p.attn.Wq.bias = load_weight_matrix(filepath);
+    // Load feedforward weights
+    p.W1.weights = load_weight(weights_dir, "W1_weight.bin");
+    p.W1.bias = load_weight(weights_dir, "W1_bias.bin");
+    p.W2.weights = load_weight(weights_dir, "W2_weight.bin");
+    p.W2.bias = load_weight(weights_dir, "W2_bias.bin");
     
-    // Attention K
-    sprintf(filepath, "%s/Wk_weight.bin", weights_dir);
-    logger("Loading Wk_weight.bin\n", DEBUG);
-    p.attn.Wk.weights = load_weight_matrix(filepath);
-    sprintf(filepath, "%s/Wk_bias.bin", weights_dir);
-    logger("Loading Wk_bias.bin\n", DEBUG);
-    p.attn.Wk.bias = load_weight_matrix(filepath);
-    
-    // Attention V
-    sprintf(filepath, "%s/Wv_weight.bin", weights_dir);
-    logger("Loading Wv_weight.bin\n", DEBUG);
-    p.attn.Wv.weights = load_weight_matrix(filepath);
-    sprintf(filepath, "%s/Wv_bias.bin", weights_dir);
-    logger("Loading Wv_bias.bin\n", DEBUG);
-    p.attn.Wv.bias = load_weight_matrix(filepath);
-    
-    // Attention O
-    sprintf(filepath, "%s/Wo_weight.bin", weights_dir);
-    logger("Loading Wo_weight.bin\n", DEBUG);
-    p.attn.Wo.weights = load_weight_matrix(filepath);
-    sprintf(filepath, "%s/Wo_bias.bin", weights_dir);
-    logger("Loading Wo_bias.bin\n", DEBUG);
-    p.attn.Wo.bias = load_weight_matrix(filepath);
-    
-    // Feed-forward W1
-    sprintf(filepath, "%s/W1_weight.bin", weights_dir);
-    logger("Loading W1_weight.bin\n", DEBUG);
-    p.W1.weights = load_weight_matrix(filepath);
-    sprintf(filepath, "%s/W1_bias.bin", weights_dir);
-    logger("Loading W1_bias.bin\n", DEBUG);
-    p.W1.bias = load_weight_matrix(filepath);
-    
-    // Feed-forward W2
-    sprintf(filepath, "%s/W2_weight.bin", weights_dir);
-    logger("Loading W2_weight.bin\n", DEBUG);
-    p.W2.weights = load_weight_matrix(filepath);
-    sprintf(filepath, "%s/W2_bias.bin", weights_dir);
-    logger("Loading W2_bias.bin\n", DEBUG);
-    p.W2.bias = load_weight_matrix(filepath);
-    
-    // LM head (bias only, weights are tied to token_embed)
-    sprintf(filepath, "%s/lm_head_bias.bin", weights_dir);
-    logger("Loading lm_head_bias.bin\n", DEBUG);
-    p.lm_head.bias = load_weight_matrix(filepath);
-    
-    // Weight tying
+    // Load LM head (bias only, weights are tied)
+    p.lm_head.bias = load_weight(weights_dir, "lm_head_bias.bin");
     p.lm_head.weights = mat_copy(&p.token_embed.weight_matrix);
     
     logger("✓ All weights loaded successfully!\n", INFO);

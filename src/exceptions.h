@@ -20,6 +20,7 @@ enum ErrorType {
 	IndexError,     /**< Array or matrix index out of bounds */
 	MemoryError,    /**< Memory allocation failure */
 	FileError,      /**< File I/O operation failure */
+	ValueError,	    /**< Invalid value encountered during processing */
 };
 
 /**
