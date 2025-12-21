@@ -26,7 +26,9 @@ run: dev
 tests: build
 	@echo ""
 	@echo "=== Compiling and running unit tests ==="
+	@mkdir -p build
 	docker run --rm -v "$$(pwd):/project" $(IMAGE_NAME) bash -c "\
+		mkdir -p build && \
 		gcc -Wall -Wextra -std=c99 -o build/test_runner \
 			tests/test_runner.c \
 			tests/test_matrix.c \
