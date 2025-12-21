@@ -38,12 +38,14 @@
  *    - Display and update history with response
  * 5. Clean up and exit
  * 
+ * @param argc Number of command-line arguments
+ * @param argv Array of command-line argument strings
  * @return 0 on success, 1 on failure
  * 
- * @note Expects model weight files in the same directory as the executable
+ * @note Requires weights directory path as first argument
  * @note Type 'quit' or 'exit' to end the conversation
  */
-int main(void) {
+int main(int argc, char *argv[]) {
     setbuf(stderr, NULL);
     setbuf(stdout, NULL);
     
@@ -53,15 +55,18 @@ int main(void) {
     // Print welcome banner
     print_retrolm();
     
-    // Get executable directory (weights are in the same folder)
-    char exe_dir[MAX_PATH];
-    if (get_executable_dir(exe_dir, MAX_PATH) != 0) {
-        fprintf(stderr, "Error: Failed to get executable directory\n");
+    // Check command-line arguments
+    if (argc < 2) {
+        fprintf(stderr, "Error: Missing weights directory path\n");
+        fprintf(stderr, "Usage: %s <weights_directory>\n", argv[0]);
+        fprintf(stderr, "Example: %s ./weights\n", argv[0]);
         return 1;
     }
     
-    // Load model weights from executable directory
-    struct TransformerParameters model = load_model_weights(exe_dir);
+    const char *weights_dir = argv[1];
+    
+    // Load model weights from specified directory
+    struct TransformerParameters model = load_model_weights(weights_dir);
     
     // Note: load_model_weights will call exit() on failure, so no need to check here
     // In a future improvement, it should return an error code instead

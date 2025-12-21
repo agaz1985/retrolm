@@ -20,7 +20,7 @@ dos: build
 run: dev
 	@echo ""
 	@echo "=== Running Linux binary ==="
-	docker run -it --rm -v "$$(pwd):/project" $(IMAGE_NAME) ./build/retrolm
+	docker run -it --rm -v "$$(pwd):/project" $(IMAGE_NAME) ./build/retrolm ./build/
 
 # Open interactive shell in container
 shell: build
