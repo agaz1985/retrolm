@@ -11,7 +11,7 @@ echo "Assembling..."
 
 echo "Compiling C sources..."
 SOURCES="../src/activations.c ../src/exceptions.c ../src/loader.c ../src/layers.c ../src/logger.c ../src/retrolm.c ../src/matrix.c ../src/matrix_ops.c ../src/memory.c ../src/transformer.c ../src/utils.c ../src/sampling.c ../src/chat.c"
-CFLAGS="-m32 -Wall -Wextra -O2"
+CFLAGS="-m32 -Wall -Wextra -O3 -march=i686 -ffast-math -funroll-loops"
 
 gcc $CFLAGS $SOURCES -lm -o retrolm
 

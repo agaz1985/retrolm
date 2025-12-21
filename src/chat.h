@@ -14,8 +14,8 @@
 /** Maximum tokens to generate in a single response */
 #define MAX_RESPONSE_TOKENS 512
 
-/** Context window size for sliding history */
-#define CONTEXT_WINDOW_SIZE 64
+/** Context window size for sliding history (kept small since no KV caching) */
+#define CONTEXT_WINDOW_SIZE 16
 
 /**
  * @brief Generate text interactively using the transformer model

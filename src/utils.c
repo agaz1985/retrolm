@@ -11,7 +11,9 @@
 #else
     #include <unistd.h>
     #include <limits.h>
-    #include <libgen.h>
+    #ifndef __DJGPP__
+        #include <libgen.h>
+    #endif
 #endif
 
 /**
@@ -84,17 +86,20 @@ int get_executable_dir(char *buffer, size_t size) {
     
     full_path[len] = '\0';
     
-    // Get directory name
-    char *dir = dirname(full_path);
-    if (!dir) {
+    // Get directory name - DOS-compatible method (no libgen.h needed)
+    char *last_slash = strrchr(full_path, '/');
+    if (!last_slash) {
         return -1;
     }
     
-    if (strlen(dir) >= size) {
+    // Copy directory path (excluding the slash)
+    size_t dir_len = last_slash - full_path;
+    if (dir_len >= size) {
         return -1;
     }
     
-    strcpy(buffer, dir);
+    strncpy(buffer, full_path, dir_len);
+    buffer[dir_len] = '\0';
 #endif
     
     return 0;
