@@ -158,10 +158,6 @@ def main():
     print("\n" + "="*70)
     print("ALL DONE! 🎉")
     print("="*70)
-    print("\nNext steps:")
-    print("1. Check training/validation loss curves")
-    print("2. If overfitting (val >> train), add more data or reduce model size")
-    print("3. Test the C implementation with: ./retro_inference")
 
 if __name__ == "__main__":
     main()

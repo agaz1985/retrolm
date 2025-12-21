@@ -1,6 +1,5 @@
 ## Misc.
-1. Add unit tests
-2. Retrain model with GPU
+1. Retrain model with GPU
 
 ## Performance Optimizations
 
