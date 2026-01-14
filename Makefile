@@ -5,7 +5,7 @@ IMAGE_NAME := retrolm-builder
 # Build Docker image
 build:
 	@echo "Building Docker image..."
-	docker build -t $(IMAGE_NAME) .
+	docker build --platform linux/amd64 -t $(IMAGE_NAME) .
 	@echo "✅ Docker image ready"
 
 # Build for Linux (development)

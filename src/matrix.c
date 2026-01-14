@@ -128,17 +128,31 @@ struct Matrix2D mat_mul(const struct Matrix2D *m1, const struct Matrix2D *m2) {
 }
 
 struct Matrix2D mat_div(const struct Matrix2D *m1, const struct Matrix2D *m2) {
-  if (m2->r == 1 && m1->c != m2->c) {
-    throw ("Unable to broadcast, matrix columns do not match!\n", InvalidInput);  	
-  }
-  if (m2->c == 1 && m1->r != m2->r) {
-    throw("Unable to broadcast, matrix rows do not match!\n", InvalidInput);  	
-  }
-  if (m2->r != 1 && m1->r != m2->r) {
-    throw("Matrix rows do not match!\n", InvalidInput);
-  }
-  if (m2->c != 1 && m1->c != m2->c) {
-    throw("Matrix columns do not match!\n", InvalidInput);
+  char error_msg[512];
+  
+  // Special case: [1,1] scalar can broadcast to anything
+  if (m2->r == 1 && m2->c == 1) {
+    // Scalar broadcast - always valid
+  } else if (m2->r == 1 && m1->c != m2->c) {
+    snprintf(error_msg, sizeof(error_msg), 
+             "DIV: Unable to broadcast, matrix columns do not match! m1: [%u, %u], m2: [%u, %u]\n", 
+             m1->r, m1->c, m2->r, m2->c);
+    throw(error_msg, InvalidInput);  	
+  } else if (m2->c == 1 && m1->r != m2->r) {
+    snprintf(error_msg, sizeof(error_msg), 
+             "DIV: Unable to broadcast, matrix rows do not match! m1: [%u, %u], m2: [%u, %u]\n", 
+             m1->r, m1->c, m2->r, m2->c);
+    throw(error_msg, InvalidInput);  	
+  } else if (m2->r != 1 && m2->c != 1 && m1->r != m2->r) {
+    snprintf(error_msg, sizeof(error_msg), 
+             "DIV: Matrix rows do not match! m1: [%u, %u], m2: [%u, %u]\n", 
+             m1->r, m1->c, m2->r, m2->c);
+    throw(error_msg, InvalidInput);
+  } else if (m2->r != 1 && m2->c != 1 && m1->c != m2->c) {
+    snprintf(error_msg, sizeof(error_msg), 
+             "DIV: Matrix columns do not match! m1: [%u, %u], m2: [%u, %u]\n", 
+             m1->r, m1->c, m2->r, m2->c);
+    throw(error_msg, InvalidInput);
   }
 
   struct Matrix2D res = mat_new(m1->r, m1->c);
@@ -155,17 +169,31 @@ struct Matrix2D mat_div(const struct Matrix2D *m1, const struct Matrix2D *m2) {
 }
 
 struct Matrix2D mat_add(const struct Matrix2D *m1, const struct Matrix2D *m2) {
-  if (m2->r == 1 && m1->c != m2->c) {
-    throw ("Unable to broadcast, matrix columns do not match!\n", InvalidInput);  	
-  }
-  if (m2->c == 1 && m1->r != m2->r) {
-    throw("Unable to broadcast, matrix rows do not match!\n", InvalidInput);  	
-  }
-  if (m2->r != 1 && m1->r != m2->r) {
-    throw("Matrix rows do not match!\n", InvalidInput);
-  }
-  if (m2->c != 1 && m1->c != m2->c) {
-    throw("Matrix columns do not match!\n", InvalidInput);
+  char error_msg[512];
+  
+  // Special case: [1,1] scalar can broadcast to anything
+  if (m2->r == 1 && m2->c == 1) {
+    // Scalar broadcast - always valid
+  } else if (m2->r == 1 && m1->c != m2->c) {
+    snprintf(error_msg, sizeof(error_msg), 
+             "Unable to broadcast, matrix columns do not match! m1: [%u, %u], m2: [%u, %u]\n", 
+             m1->r, m1->c, m2->r, m2->c);
+    throw(error_msg, InvalidInput);  	
+  } else if (m2->c == 1 && m1->r != m2->r) {
+    snprintf(error_msg, sizeof(error_msg), 
+             "Unable to broadcast, matrix rows do not match! m1: [%u, %u], m2: [%u, %u]\n", 
+             m1->r, m1->c, m2->r, m2->c);
+    throw(error_msg, InvalidInput);  	
+  } else if (m2->r != 1 && m2->c != 1 && m1->r != m2->r) {
+    snprintf(error_msg, sizeof(error_msg), 
+             "Matrix rows do not match! m1: [%u, %u], m2: [%u, %u]\n", 
+             m1->r, m1->c, m2->r, m2->c);
+    throw(error_msg, InvalidInput);
+  } else if (m2->r != 1 && m2->c != 1 && m1->c != m2->c) {
+    snprintf(error_msg, sizeof(error_msg), 
+             "Matrix columns do not match! m1: [%u, %u], m2: [%u, %u]\n", 
+             m1->r, m1->c, m2->r, m2->c);
+    throw(error_msg, InvalidInput);
   }
 
   struct Matrix2D res = mat_new(m1->r, m1->c);
@@ -182,17 +210,31 @@ struct Matrix2D mat_add(const struct Matrix2D *m1, const struct Matrix2D *m2) {
 }
 
 struct Matrix2D mat_sub(const struct Matrix2D *m1, const struct Matrix2D *m2) {
-  if (m2->r == 1 && m1->c != m2->c) {
-    throw ("Unable to broadcast, matrix columns do not match!\n", InvalidInput);  	
-  }
-  if (m2->c == 1 && m1->r != m2->r) {
-    throw("Unable to broadcast, matrix rows do not match!\n", InvalidInput);  	
-  }
-  if (m2->r != 1 && m1->r != m2->r) {
-    throw("Matrix rows do not match!\n", InvalidInput);
-  }
-  if (m2->c != 1 && m1->c != m2->c) {
-    throw("Matrix columns do not match!\n", InvalidInput);
+  char error_msg[512];
+  
+  // Special case: [1,1] scalar can broadcast to anything
+  if (m2->r == 1 && m2->c == 1) {
+    // Scalar broadcast - always valid
+  } else if (m2->r == 1 && m1->c != m2->c) {
+    snprintf(error_msg, sizeof(error_msg), 
+             "SUB: Unable to broadcast, matrix columns do not match! m1: [%u, %u], m2: [%u, %u]\n", 
+             m1->r, m1->c, m2->r, m2->c);
+    throw(error_msg, InvalidInput);  	
+  } else if (m2->c == 1 && m1->r != m2->r) {
+    snprintf(error_msg, sizeof(error_msg), 
+             "SUB: Unable to broadcast, matrix rows do not match! m1: [%u, %u], m2: [%u, %u]\n", 
+             m1->r, m1->c, m2->r, m2->c);
+    throw(error_msg, InvalidInput);  	
+  } else if (m2->r != 1 && m2->c != 1 && m1->r != m2->r) {
+    snprintf(error_msg, sizeof(error_msg), 
+             "SUB: Matrix rows do not match! m1: [%u, %u], m2: [%u, %u]\n", 
+             m1->r, m1->c, m2->r, m2->c);
+    throw(error_msg, InvalidInput);
+  } else if (m2->r != 1 && m2->c != 1 && m1->c != m2->c) {
+    snprintf(error_msg, sizeof(error_msg), 
+             "SUB: Matrix columns do not match! m1: [%u, %u], m2: [%u, %u]\n", 
+             m1->r, m1->c, m2->r, m2->c);
+    throw(error_msg, InvalidInput);
   }
 
   struct Matrix2D res = mat_new(m1->r, m1->c);

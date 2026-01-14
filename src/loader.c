@@ -36,16 +36,19 @@ struct Matrix2D load_weight_matrix(const char *filepath) {
 }
 
 static struct Matrix2D load_weight(const char *dir, const char *filename) {
-    char filepath[512];
+    char filepath[1024];
     char logmsg[256];
-    snprintf(filepath, sizeof(filepath), "%s%s", dir, filename);
+    int written = snprintf(filepath, sizeof(filepath), "%s%s", dir, filename);
+    if (written < 0 || (size_t)written >= sizeof(filepath)) {
+        throw("Weight file path too long\n", ValueError);
+    }
     snprintf(logmsg, sizeof(logmsg), "Loading %s\n", filename);
     logger(logmsg, DEBUG);
     return load_weight_matrix(filepath);
 }
 
 struct TransformerParameters load_model_weights(const char *weights_dir) {
-    char weights_path[512];
+    char weights_path[1024];
     const char *normalized_dir;
     struct TransformerParameters p;
     
@@ -56,7 +59,7 @@ struct TransformerParameters load_model_weights(const char *weights_dir) {
     if (dir_len == 0) {
         throw("Empty weights directory path\n", ValueError);
     }
-    if (dir_len > 490) {
+    if (dir_len > 1000) {
         throw("Weights directory path too long\n", ValueError);
     }
     
