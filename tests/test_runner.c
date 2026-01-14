@@ -23,6 +23,9 @@ extern void run_layers_tests();
 extern void run_transformer_tests();
 
 int main(int argc, char *argv[]) {
+    (void)argc;  /* Unused parameter */
+    (void)argv;  /* Unused parameter */
+    
     printf("\n");
     printf("╔════════════════════════════════════════╗\n");
     printf("║       RetroLM Unit Test Suite         ║\n");

@@ -1,15 +1,3 @@
-/**
- * @file matrix.c
- * @brief Implementation of high-level matrix operations
- * 
- * This module implements the Matrix2D API by wrapping low-level operations
- * from matrix_ops.h. It provides:
- * - Input validation and error checking
- * - Memory management
- * - Broadcasting logic for element-wise operations
- * - High-level mathematical operations
- */
-
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -25,18 +13,15 @@
  * Construction and Destruction
  * ======================================== */
 
-/**
- * @brief Create new zero-initialized float matrix
- */
 struct Matrix2D mat_new(unsigned int r, unsigned int c) {
-	if (r == 0) {
-		throw("Matrix number of rows cannot be zero.\n", InvalidInput);
-	}
 	if (c == 0) {
 		throw("Matrix number of columns cannot be zero.\n", InvalidInput);
 	}
 
-	float *data = alloc_mat_float(r, c);
+	float *data = NULL;
+	if (r > 0) {
+		data = alloc_mat_float(r, c);
+	}
 	struct Matrix2D m = {r, c, data};
 	return m;
 }
@@ -49,14 +34,14 @@ void mat_free(struct Matrix2D *m) {
 }
 
 struct Matrix2D_UInt mat_uint_new(unsigned int r, unsigned int c) {
-	if (r == 0) {
-		throw("Matrix number of rows cannot be zero.\n", InvalidInput);
-	}
 	if (c == 0) {
 		throw("Matrix number of columns cannot be zero.\n", InvalidInput);
 	}
 
-	unsigned int *data = alloc_mat_uint(r, c);
+	unsigned int *data = NULL;
+	if (r > 0) {
+		data = alloc_mat_uint(r, c);
+	}
 	struct Matrix2D_UInt m = {r, c, data};
 	return m;
 }
@@ -266,22 +251,10 @@ void mat_scale(struct Matrix2D *m, float alpha) {
 	_matscale(m->data, m->r, m->c, alpha);
 }
 
-void mat_shift(struct Matrix2D *m, float beta) {
-	_matshift(m->data, m->r, m->c, beta);
-}
-
 /* special matrices / transforms */
 struct Matrix2D mat_transpose(const struct Matrix2D *m) {
 	struct Matrix2D res = mat_new(m->c, m->r);
 	_mattranspose(m->data, m->r, m->c, res.data);
-	return res;
-}
-
-struct Matrix2D mat_identity(unsigned int n) {
-	struct Matrix2D res = mat_new(n, n);
-	for (unsigned int i = 0; i < n; ++i) {
-		*mat_at(&res, i, i) = 1.f;
-	}
 	return res;
 }
 
@@ -293,25 +266,9 @@ struct Matrix2D mat_copy(const struct Matrix2D *m) {
 	return res;
 }
 
-struct Matrix2D mat_clamp(const struct Matrix2D *m, float lo, float hi) {
-	if (lo >= hi) {
-		throw("Low value must be strictly lower than the high value!\n", InvalidInput);
-	}
-
-	struct Matrix2D res = mat_copy(m);
-	_matclamp(res.data, res.r, res.c, lo, hi);
-	return res;
-}
-
 struct Matrix2D mat_clamp_min(const struct Matrix2D *m, float lo) {
 	struct Matrix2D res = mat_copy(m);
 	_matclampmin(res.data, res.r, res.c, lo);
-	return res;
-}
-
-struct Matrix2D mat_clamp_max(const struct Matrix2D *m, float hi) {
-	struct Matrix2D res = mat_copy(m);
-	_matclampmax(res.data, res.r, res.c, hi);
 	return res;
 }
 
@@ -335,11 +292,4 @@ struct Matrix2D mat_rowselect(const struct Matrix2D *m, const struct Matrix2D_UI
 		memcpy(res.data + i*m->c, m->data + indices->data[i]*m->c, m->c * sizeof(float));
 	}
 	return res;
-}
-
-void mat_random_init(struct Matrix2D *m) {
-	const unsigned int n = m->r * m->c;
-	for (unsigned int i = 0; i < n; ++i) {
-		m->data[i] = (float)rand() / RAND_MAX;
-	}
 }

@@ -1,17 +1,9 @@
-/**
- * @file transformer.c
- * @brief Implementation of transformer language model
- */
-
 #include "transformer.h"
 #include "activations.h"
 #include "layers.h"
 #include "exceptions.h"
 #include <stdio.h>
 
-/**
- * @brief Create new transformer with allocated but uninitialized parameters
- */
 struct TransformerParameters transformer_new(unsigned int seq_len, unsigned int embeded_dim, unsigned int ff_dim, unsigned int vocab_size) {
 	struct TransformerParameters params;
 	params.token_embed = embeddings_new(vocab_size, embeded_dim);
@@ -23,26 +15,6 @@ struct TransformerParameters transformer_new(unsigned int seq_len, unsigned int 
 	return params;
 }
 
-struct TransformerParameters transformer_copy(const struct TransformerParameters *p) {
-	struct TransformerParameters params;
-	params.token_embed = embeddings_copy(&p->token_embed);
-	params.pos_embed = mat_copy(&p->pos_embed);
-	params.attn = attention_copy(&p->attn);
-	params.W1 = linear_copy(&p->W1);
-	params.W2 = linear_copy(&p->W2);
-	params.lm_head = linear_copy(&p->lm_head);
-	return params;
-}
-
-void transformer_random_init(struct TransformerParameters *p) {
-	embeddings_random_init(&p->token_embed);
-	mat_random_init(&p->pos_embed);
-	attention_random_init(&p->attn);
-	linear_random_init(&p->W1);
-	linear_random_init(&p->W2);
-	linear_random_init(&p->lm_head);
-}
-
 void transformer_free(struct TransformerParameters* p) {
 	embeddings_free(&p->token_embed);
 	mat_free(&p->pos_embed);
@@ -52,21 +24,41 @@ void transformer_free(struct TransformerParameters* p) {
 	linear_free(&p->lm_head);
 }
 
-struct Matrix2D transformer_forward(const struct Matrix2D_UInt *x, const struct TransformerParameters *p) {
+struct Matrix2D transformer_forward(const struct Matrix2D_UInt *x,
+                                    const struct TransformerParameters *p,
+                                    struct AttentionCache *cache,
+                                    unsigned int pos) {
 	if (x->r > 1) {
 		throw("Batch processing not supported.\n", InvalidInput);
 	}
-	const unsigned int N = x->c;
+	const unsigned int N = x->c;  // Number of tokens in current input
 	
+	/* Token embeddings */
 	struct Matrix2D X = embeddings_forward(x, &p->token_embed);
-	struct Matrix2D_UInt posEmbedIndices = indices_new(N);
+	
+	/* Positional embeddings - use current position */
+	struct Matrix2D_UInt posEmbedIndices = mat_uint_new(1, N);
+	for (unsigned int i = 0; i < N; i++) {
+		unsigned int idx = pos + i;
+		// Check bounds to prevent accessing beyond position embeddings
+		if (idx >= p->pos_embed.r) {
+			char msg[256];
+			snprintf(msg, sizeof(msg), "Position index %u exceeds maximum sequence length %u\n", idx, p->pos_embed.r);
+			mat_uint_free(&posEmbedIndices);
+			mat_free(&X);
+			throw(msg, InvalidInput);
+		}
+		posEmbedIndices.data[i] = idx;
+	}
 	struct Matrix2D pS = mat_rowselect(&p->pos_embed, &posEmbedIndices);
 	struct Matrix2D X_new = mat_add(&X, &pS);
 	mat_free(&X);
+	mat_uint_free(&posEmbedIndices);
+	mat_free(&pS);
 	X = X_new;
 	
-	/* Self-Attention */
-	X_new = attention_forward(&X, &p->attn);
+	/* Self-Attention with provided cache */
+	X_new = attention_forward(&X, &p->attn, cache);
 	mat_free(&X);
 	X = X_new;
 	
@@ -88,8 +80,6 @@ struct Matrix2D transformer_forward(const struct Matrix2D_UInt *x, const struct 
 	
 	/* Deallocate memory */
 	mat_free(&X);
-	mat_uint_free(&posEmbedIndices);
-	mat_free(&pS);
 	
 	return logits;
 }

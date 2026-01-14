@@ -158,23 +158,6 @@ int test_matrix_subtraction() {
     return 1;
 }
 
-int test_matrix_clamp() {
-    struct Matrix2D m = mat_new(2, 2);
-    m.data[0] = -5.0f; m.data[1] = 2.0f;
-    m.data[2] = 10.0f; m.data[3] = 4.0f;
-    
-    struct Matrix2D result = mat_clamp(&m, 0.0f, 5.0f);
-    
-    ASSERT_FLOAT_EQ(result.data[0], 0.0f, "Result[0,0] should be clamped to 0");
-    ASSERT_FLOAT_EQ(result.data[1], 2.0f, "Result[0,1] should be 2.0");
-    ASSERT_FLOAT_EQ(result.data[2], 5.0f, "Result[1,0] should be clamped to 5");
-    ASSERT_FLOAT_EQ(result.data[3], 4.0f, "Result[1,1] should be 4.0");
-    
-    mat_free(&m);
-    mat_free(&result);
-    return 1;
-}
-
 int test_matrix_transpose() {
     struct Matrix2D m = mat_new(2, 3);
     m.data[0] = 1.0f; m.data[1] = 2.0f; m.data[2] = 3.0f;
@@ -232,7 +215,6 @@ void run_matrix_tests() {
     RUN_TEST(test_matrix_multiplication);
     RUN_TEST(test_matrix_addition);
     RUN_TEST(test_matrix_subtraction);
-    RUN_TEST(test_matrix_clamp);
     RUN_TEST(test_matrix_transpose);
     RUN_TEST(test_matrix_copy);
 }

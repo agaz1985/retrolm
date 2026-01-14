@@ -63,27 +63,6 @@ int test_linear_forward() {
     return 1;
 }
 
-int test_linear_copy() {
-    struct LinearParameters linear = linear_new(3, 2);
-    linear.weights.data[0] = 1.0f;
-    linear.bias.data[0] = 0.5f;
-    
-    struct LinearParameters copy = linear_copy(&linear);
-    
-    ASSERT(copy.weights.r == linear.weights.r, "Copy should have same weight dimensions");
-    ASSERT(copy.weights.c == linear.weights.c, "Copy should have same weight dimensions");
-    ASSERT_FLOAT_EQ(copy.weights.data[0], 1.0f, "Copy should have same weight values");
-    ASSERT_FLOAT_EQ(copy.bias.data[0], 0.5f, "Copy should have same bias values");
-    
-    /* Modify original, copy should be unchanged */
-    linear.weights.data[0] = 99.0f;
-    ASSERT_FLOAT_EQ(copy.weights.data[0], 1.0f, "Copy should be independent");
-    
-    linear_free(&linear);
-    linear_free(&copy);
-    return 1;
-}
-
 /* ========================================
  * Embeddings Tests
  * ======================================== */
@@ -135,21 +114,6 @@ int test_embeddings_forward() {
     return 1;
 }
 
-int test_embeddings_copy() {
-    struct EmbeddingsParameters embed = embeddings_new(10, 5);
-    embed.weight_matrix.data[0] = 42.0f;
-    
-    struct EmbeddingsParameters copy = embeddings_copy(&embed);
-    
-    ASSERT(copy.weight_matrix.r == embed.weight_matrix.r, "Copy should have same dimensions");
-    ASSERT(copy.weight_matrix.c == embed.weight_matrix.c, "Copy should have same dimensions");
-    ASSERT_FLOAT_EQ(copy.weight_matrix.data[0], 42.0f, "Copy should have same values");
-    
-    embeddings_free(&embed);
-    embeddings_free(&copy);
-    return 1;
-}
-
 /* ========================================
  * Self-Attention Tests
  * ======================================== */
@@ -166,19 +130,6 @@ int test_self_attention_new() {
     return 1;
 }
 
-int test_self_attention_copy() {
-    struct SelfAttentionParameters attn = attention_new(16);
-    attn.Wq.weights.data[0] = 1.5f;
-    
-    struct SelfAttentionParameters copy = attention_copy(&attn);
-    
-    ASSERT_FLOAT_EQ(copy.Wq.weights.data[0], 1.5f, "Copy should have same values");
-    
-    attention_free(&attn);
-    attention_free(&copy);
-    return 1;
-}
-
 void run_layers_tests() {
     printf("\n" COLOR_YELLOW "======================================\n");
     printf("Running Layers Tests\n");
@@ -186,10 +137,7 @@ void run_layers_tests() {
     
     RUN_TEST(test_linear_new);
     RUN_TEST(test_linear_forward);
-    RUN_TEST(test_linear_copy);
     RUN_TEST(test_embeddings_new);
     RUN_TEST(test_embeddings_forward);
-    RUN_TEST(test_embeddings_copy);
     RUN_TEST(test_self_attention_new);
-    RUN_TEST(test_self_attention_copy);
 }

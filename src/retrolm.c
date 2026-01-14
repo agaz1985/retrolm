@@ -1,15 +1,3 @@
-/**
- * @file retrolm.c
- * @brief Main entry point for RetroLM interactive chat application
- * 
- * This program implements an interactive chatbot using a transformer language model.
- * It supports:
- * - Loading pre-trained model weights
- * - Interactive text generation with temperature sampling
- * - Sliding window context management
- * - Real-time streaming output
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,31 +8,10 @@
 #include "loader.h"
 #include "chat.h"
 
-#define MAX_INPUT 256      /**< Maximum input length from user */
-#define VOCAB_SIZE 256     /**< Vocabulary size (byte-level 0-255) */
-#define MAX_PATH 512       /**< Maximum path length */
+#define MAX_INPUT 256
+#define VOCAB_SIZE 256
+#define MAX_PATH 512
 
-/**
- * @brief Main entry point for RetroLM interactive chat
- * 
- * Program flow:
- * 1. Initialize random seed for sampling
- * 2. Print banner
- * 3. Load pre-trained model weights
- * 4. Enter interactive loop:
- *    - Read user input
- *    - Update context history
- *    - Generate response
- *    - Display and update history with response
- * 5. Clean up and exit
- * 
- * @param argc Number of command-line arguments
- * @param argv Array of command-line argument strings
- * @return 0 on success, 1 on failure
- * 
- * @note Requires weights directory path as first argument
- * @note Type 'quit' or 'exit' to end the conversation
- */
 int main(int argc, char *argv[]) {
     setbuf(stderr, NULL);
     setbuf(stdout, NULL);
@@ -121,8 +88,8 @@ int main(int argc, char *argv[]) {
         printf("Bot: ");
         fflush(stdout);
         
-        // Generate response (100 tokens max)
-        char *response = generate_interactive(&model, history, 100, VOCAB_SIZE);
+        // Generate response (100 tokens max, temperature 0.8)
+        char *response = generate_interactive(&model, history, 100, VOCAB_SIZE, 0.8f);
         
         if (!response) {
             fprintf(stderr, "\nError: Failed to generate response\n");

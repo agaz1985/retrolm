@@ -1,19 +1,14 @@
-/**
- * @file sampling.c
- * @brief Implementation of text sampling functions
- */
-
 #include <stdlib.h>
 #include <math.h>
 #include "sampling.h"
 
 unsigned int sample_from_logits(float *logits, unsigned int vocab_size, float temperature) {
-    // Apply temperature scaling to logits first
-    for (unsigned int i = 0; i < vocab_size; i++) {
-        logits[i] /= temperature;
+    // Validate temperature (must be positive)
+    if (temperature <= 0.0f) {
+        temperature = 1.0f;  // Default to 1.0 for invalid values
     }
     
-    // Apply softmax with numerical stability (subtract max)
+    // Find max logit for numerical stability
     float max_logit = logits[0];
     for (unsigned int i = 1; i < vocab_size; i++) {
         if (logits[i] > max_logit) {
@@ -21,28 +16,38 @@ unsigned int sample_from_logits(float *logits, unsigned int vocab_size, float te
         }
     }
     
+    // Allocate temporary array for probabilities
+    float *probs = malloc(vocab_size * sizeof(float));
+    if (!probs) {
+        // Fallback: return first token if allocation fails
+        return 0;
+    }
+    
+    // Apply temperature scaling and softmax
     float sum = 0.0f;
     for (unsigned int i = 0; i < vocab_size; i++) {
-        logits[i] = expf(logits[i] - max_logit);
-        sum += logits[i];
+        probs[i] = expf((logits[i] - max_logit) / temperature);
+        sum += probs[i];
     }
     
     // Normalize to probabilities
     for (unsigned int i = 0; i < vocab_size; i++) {
-        logits[i] /= sum;
+        probs[i] /= sum;
     }
     
     // Sample from the distribution using cumulative probability
     float rand_val = (float)rand() / (float)RAND_MAX;
     float cumsum = 0.0f;
     
+    unsigned int result = vocab_size - 1;  // Default fallback
     for (unsigned int i = 0; i < vocab_size; i++) {
-        cumsum += logits[i];
+        cumsum += probs[i];
         if (rand_val < cumsum) {
-            return i;
+            result = i;
+            break;
         }
     }
     
-    // Fallback to last token (should rarely happen due to numerical precision)
-    return vocab_size - 1;
+    free(probs);
+    return result;
 }
